@@ -34,3 +34,8 @@
 # Folders
 x64/
 Debug/
+
+#Files
+*.opensdf
+*.suo
+*.sdf
