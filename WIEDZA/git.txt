@@ -1,0 +1,15 @@
+git add plik.txt //dodaje plik do repozytorium (na zielono)
+git branch -a // wyświetla wszystkie branche
+git checkout nazwaBrancha // przełącza na branch nazwaBrancha
+git commit -m "message" // robi commita z zielonych plików
+git diff --stat // porównuje różnice ale nie wyświetla plików
+git diff // wyświetla zawartość zmienionych plików
+git diff nrCommita1 nrCommita2 // porównuje różnice pomiędzy nrCommita1 i nrCommita2
+git pull // ściąga zmiany od remote
+git push // wysyła zmiany na remote
+git remote -v // wyświetla remote
+git reset plik.txt // przeciwieństwo git add - z zielonego robi czerwony
+git status // wyświetla zmienione pliki
+gitk // narzędzie do wyświetlania drzewka gita
+man git-pull // wyświetla pomoc git pull, opis opcji itp
+
