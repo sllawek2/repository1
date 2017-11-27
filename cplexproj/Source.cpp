@@ -1,97 +1,52 @@
-// -------------------------------------------------------------- -*- C++ -*-
-// File: blend.cpp
-// Version 12.6  
-// --------------------------------------------------------------------------
-// Licensed Materials - Property of IBM
-// 5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
-// Copyright IBM Corporation 2000, 2013. All Rights Reserved.
-//
-// US Government Users Restricted Rights - Use, duplication or
-// disclosure restricted by GSA ADP Schedule Contract with
-// IBM Corp.
-// --------------------------------------------------------------------------
-//
-// blend.cpp -- A blending problem
-
-/* ------------------------------------------------------------
-
-Problem Description
--------------------
-
-Goal is to blend four sources to produce an alloy: pure metal, raw
-materials, scrap, and ingots.
-
-Each source has a cost.
-Each source is made up of elements in different proportions.
-Alloy has minimum and maximum proportion of each element.
-
-Minimize cost of producing a requested quantity of alloy.
-
------------------------------------------------------------- */
-
-
 #include <ilcplex/ilocplex.h>
 
+
+
+
 ILOSTLBEGIN
-
-IloInt nbElements, nbRaw, nbScrap, nbIngot;
-IloNum alloy;
-IloNumArray nm, nr, ns, ni, p, P;
-
-IloNumArray2 PRaw, PScrap, PIngot;
-
-
-void define_data(IloEnv env) {
-   nbElements = 3;
-   nbRaw      = 2;
-   nbScrap    = 2;
-   nbIngot    = 1;
-   alloy      = 71;
-   nm = IloNumArray(env, nbElements, 22.0, 10.0, 13.0);
-   nr = IloNumArray(env, nbRaw, 6.0, 5.0);
-   ns = IloNumArray(env, nbScrap, 7.0, 8.0);
-   ni = IloNumArray(env, nbIngot, 9.0);
-   p = IloNumArray(env, nbElements, 0.05, 0.30, 0.60);
-   P = IloNumArray(env, nbElements, 0.10, 0.40, 0.80);
-   PRaw   = IloNumArray2(env, nbElements);
-   PScrap = IloNumArray2(env, nbElements);
-   PIngot = IloNumArray2(env, nbElements);
-   PRaw[0] = IloNumArray(env, nbRaw, 0.20, 0.01);
-   PRaw[1] = IloNumArray(env, nbRaw, 0.05, 0.00);
-   PRaw[2] = IloNumArray(env, nbRaw, 0.05, 0.30);
-
-   PScrap[0] = IloNumArray(env, nbScrap, 0.00, 0.01);
-   PScrap[1] = IloNumArray(env, nbScrap, 0.60, 0.00);
-   PScrap[2] = IloNumArray(env, nbScrap, 0.40, 0.70);
-
-   PIngot[0] = IloNumArray(env, nbIngot, 0.10);
-   PIngot[1] = IloNumArray(env, nbIngot, 0.45);
-   PIngot[2] = IloNumArray(env, nbIngot, 0.45);
-}
-///////////////////////////////////////////
 
 #include <fstream>
 #include <string>
 #include <vector>
 
+	
+const unsigned int ILOSC_KLOCKOW = 3;
+
+IloInt a = 10;//gap frame
+IloInt b = 180, c = 180;
+
 class Klocek{
 public:
-  Klocek(unsigned int a, unsigned int b):a(a),b(b),pole(a*b)
+  Klocek(const IloEnv &env,unsigned int w, unsigned int h):
+	  w(w),h(h),pole(w*h),p(env,0,1), x1(env, a, b-a), x2(env, a, b-a),y1(env, a, c-a), y2(env, a, c-a)
   {
 
   }
 //private:
-  IloInt a;//d³ugoœæ boku a
-  IloInt b;//d³ugoœæ boku b
+  IloInt w;//szerokoœæ produktu [30,80]
+  IloInt h;//wysokoœæ produktu [30,50]
+  IloIntVar x1; //bli¿sza krawêdŸ na osi X
+  IloIntVar x2; //dalsza krawêdŸ na osi X
+  IloIntVar y1;
+  IloIntVar y2;
+  IloIntVar x; //po³o¿enie œrodka produktu
+  IloIntVar y;
+  //gap = 3 //odstêp pomiedzy produktami
+  //gap frame = 10 //przerwa pomiêdzy palet¹ a produktami
+  //box limit 180x180 //wymiary palety
   IloNum pole; //pole a*b
+  //orientacja o {0,1} bez obrotu, obrót
+  IloIntVar p;// 0 nie wybrany, 1 wybrany
 
-  IloBoolVar wybrany;//bool
+
 };
 
-const unsigned int ILOSC_KLOCKOW = 27;
 
-int main2()
+
+int main()
 {
+	  IloEnv env;
+
   std::vector<Klocek> wszystkieKlocki;
   
   fstream fInputFile;
@@ -105,60 +60,50 @@ int main2()
       std::getline(fInputFile,sLine);
       std::stringstream stream(sLine);
       stream>>a>>b;
-      Klocek k(a,b);
+      Klocek k(env,a,b);
       wszystkieKlocki.push_back(k);
     }
   }
 
 
 
-  IloEnv env;
+
   try {
     IloInt j;
 
-  //  define_data(env);
 
     IloModel model(env);
 
-    IloInt iIlosc = ILOSC_KLOCKOW;
-    IloNumVarArray iTabWybranych(env, iIlosc,0.0, IloInfinity);
-    IloNumArray iTabPol(env,iIlosc);
+    IloInt iIlosc = ILOSC_KLOCKOW;//27 klocków w podajniku
+ 
+	//stworzenie tablicy pól wszystkich klocków
+	IloNumArray iPola(env);
+	IloIntVarArray iTabWybranych(env);
+	for(int i = 0; i<iIlosc; i++)
+	{
+		iPola.add(wszystkieKlocki[i].pole);
+		iTabWybranych.add(wszystkieKlocki[i].p);
+	}
+
+	//ograniczenia
+	for(int i = 0; i<iIlosc; i++)
+	{ 
+		model.add(wszystkieKlocki[i].x1 >= a);
+		model.add(wszystkieKlocki[i].x2 <= b-a);
+		model.add(wszystkieKlocki[i].y1 >= a);
+		model.add(wszystkieKlocki[i].y2 <= c-a);
+
+		model.add(wszystkieKlocki[i].x1 < wszystkieKlocki[i].x2);
+		model.add(wszystkieKlocki[i].y1 < wszystkieKlocki[i].y2);
+
+		model.add(wszystkieKlocki[i].pole == (wszystkieKlocki[i].x2 -wszystkieKlocki[i].x1) * (wszystkieKlocki[i].y2 -wszystkieKlocki[i].y1));
+		
+
+	}
 
 
-    for(int i=0; i<ILOSC_KLOCKOW; i++)
-    {
-      iTabWybranych[i] = wszystkieKlocki[i].wybrany;
-      iTabPol[i] = wszystkieKlocki[i].pole;
-    }
-    model.add(IloMaximize(env,IloScalProd(iTabPol,iTabWybranych)));
-
-    IloNum maksymalnePole = 180;
-    model.add(IloScalProd(iTabPol,iTabWybranych) == maksymalnePole);
-
-    ////IloNumVarArray m(env, nbElements, 0.0, IloInfinity);
-    ////IloNumVarArray r(env, nbRaw,   0.0, IloInfinity);
-    ////IloNumVarArray s(env, nbScrap, 0.0, IloInfinity);
-    ////IloNumVarArray i(env, nbIngot, 0.0, 100000);
-    ////IloNumVarArray e(env, nbElements);
-
-    ////// Objective Function: Minimize Cost
-    ////model.add(IloMaximize(env, IloScalProd(nm, m) + IloScalProd(nr, r) +
-    //IloScalProd(ns, s) + IloScalProd(ni, i)  ));
-
-    //// Min and max quantity of each element in alloy
-    //for (j = 0; j < nbElements; j++) {
-    //  e[j] = IloNumVar(env, p[j] * alloy, P[j] * alloy);
-    //}
-
-    //// Constraint: produce requested quantity of alloy
-    //model.add(IloSum(e) == alloy);
-
-    //// Constraints: Satisfy element quantity requirements for alloy
-    //for (j = 0; j < nbElements; j++) {
-    //  model.add(e[j] == m[j] + IloScalProd(PRaw[j], r)
-    //    + IloScalProd(PScrap[j], s)
-    //    + IloScalProd(PIngot[j], i));
-    //}
+	//dodanie do modelu celu - maksymalizacja tego równania
+	model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
 
     // Optimize
     IloCplex cplex(model);
@@ -174,102 +119,8 @@ int main2()
   }
   env.end();
 
+  	getchar();//stop 
 
 	return 0;
 }
 
-/////////////////////////////////
-int
-main(int, char**)
-{
-   IloEnv env;
-   try {
-      IloInt j;
-   
-      define_data(env);
-   
-      IloModel model(env);
-   
-      IloNumVarArray m(env, nbElements, 0.0, IloInfinity);
-      IloNumVarArray r(env, nbRaw,   0.0, IloInfinity);
-      IloNumVarArray s(env, nbScrap, 0.0, IloInfinity);
-      IloNumVarArray i(env, nbIngot, 0.0, 100000);
-      IloNumVarArray e(env, nbElements);
-   
-      // Objective Function: Minimize Cost
-      model.add(IloMinimize(env, IloScalProd(nm, m) + IloScalProd(nr, r) +
-                                 IloScalProd(ns, s) + IloScalProd(ni, i)  ));
-   
-      // Min and max quantity of each element in alloy
-      for (j = 0; j < nbElements; j++) {
-         e[j] = IloNumVar(env, p[j] * alloy, P[j] * alloy);
-      }
-   
-      // Constraint: produce requested quantity of alloy
-      model.add(IloSum(e) == alloy);
-   
-      // Constraints: Satisfy element quantity requirements for alloy
-      for (j = 0; j < nbElements; j++) {
-         model.add(e[j] == m[j] + IloScalProd(PRaw[j], r)
-                                + IloScalProd(PScrap[j], s)
-                                + IloScalProd(PIngot[j], i));
-      }
-   
-      // Optimize
-      IloCplex cplex(model);
-      cplex.setOut(env.getNullStream());
-      cplex.setWarning(env.getNullStream());
-      cplex.solve();
-   
-      if (cplex.getStatus() == IloAlgorithm::Infeasible)
-         env.out() << "No Solution" << endl;
-
-      env.out() << "Solution status: " << cplex.getStatus() << endl;
-   
-      // Print results
-      env.out() << "Cost:" << cplex.getObjValue() << endl;
-      env.out() << "Pure metal:" << endl;
-      for(j = 0; j < nbElements; j++)
-         env.out() << j << ") " << cplex.getValue(m[j]) << endl;
-      env.out() << "Raw material:" << endl;
-      for(j = 0; j < nbRaw; j++)
-         env.out() << j << ") " << cplex.getValue(r[j]) << endl;
-      env.out() << "Scrap:" << endl;
-      for(j = 0; j < nbScrap; j++)
-         env.out() << j << ") " << cplex.getValue(s[j]) << endl;
-      env.out() << "Ingots : " << endl;
-      for(j = 0; j < nbIngot; j++)
-         env.out() << j << ") " << cplex.getValue(i[j]) << endl;
-      env.out() << "Elements:" << endl;
-      for(j = 0; j < nbElements; j++)
-         env.out() << j << ") " << cplex.getValue(e[j]) << endl;
-   }
-   catch (IloException& ex) {
-      cerr << "Error: " << ex << endl;
-   }
-   catch (...) {
-      cerr << "Error" << endl;
-   }
-   env.end();
-   return 0;
-}
-
-/*
-Cost:653.554
-Pure metal:
-0) 0
-1) 0
-2) 0
-Raw material:
-0) 0
-1) 0
-Scrap:
-0) 17.059
-1) 30.2311
-Ingots : 
-0) 32.4769
-Elements:
-0) 3.55
-1) 24.85
-2) 42.6
-*/
