@@ -15,7 +15,7 @@ ILOSTLBEGIN
 const unsigned int ILOSC_KLOCKOW = 27;
 
 IloInt a = 10;//gap frame
-IloInt b = 80, c = 80;
+IloInt b = 180, c = 180;
 
 class Klocek{
 public:
@@ -89,6 +89,22 @@ int main()
 		iTabWybranych.add(wszystkieKlocki[i].p);
 	}
 	
+	//Suma wszystkich pol
+	IloNum Sumapol=0;
+	for(int i=0;i<ILOSC_KLOCKOW;i++)
+	{
+		Sumapol=Sumapol+wszystkieKlocki[i].pole;
+	}
+
+	IloIntVar x_max;//uzyte tylko w drugim wariancie
+	IloIntVar y_max;//uzyte tylko w drugim wariancie
+
+	unsigned int Wariant = 1;
+	if(Sumapol < 0.75 * b*c)
+	{
+		Wariant =2;
+	}
+
 	//ograniczenia
 	for(int i = 0; i<iIlosc; i++) //i to k
 	{ 
@@ -97,61 +113,71 @@ int main()
 		model.add(wszystkieKlocki[i].y1 >= a);							//4.4
 		model.add(wszystkieKlocki[i].y2 <= c-a);						//4.5
 			
-		model.add(wszystkieKlocki[i].x1 - wszystkieKlocki[i].x2 <0);
-		model.add(wszystkieKlocki[i].y1 - wszystkieKlocki[i].y2<0);  
+		model.add(wszystkieKlocki[i].x1 + wszystkieKlocki[i].w + (wszystkieKlocki[i].h - wszystkieKlocki[i].w)*wszystkieKlocki[i].o - wszystkieKlocki[i].x2 == 0);//4.7 4.8
+		model.add(wszystkieKlocki[i].y1 + wszystkieKlocki[i].h - (wszystkieKlocki[i].w - wszystkieKlocki[i].h)*wszystkieKlocki[i].o - wszystkieKlocki[i].y2 == 0); //4.9 4.10
 		
-		for(int j = i+1; j<iIlosc ; j++) //j to f
+
+		if(1 == Wariant)
 		{
-			model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);						//4.6
-			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
-			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
-			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
-			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
+		   for(int j = i+1; j<iIlosc ; j++) //j to f
+		   {
+		   		model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);			//4.6
+		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
+		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
+		   		model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
+				model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
+		   }
 		}
-		//model.add(wszystkieKlocki[i].pole == (wszystkieKlocki[i].x2 -wszystkieKlocki[i].x1) * (wszystkieKlocki[i].y2 -wszystkieKlocki[i].y1) );
-		
+		else
+		{
+			for(int j = i+1; j<iIlosc ; j++) //j to f
+			{
+				model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);		//4.6
+		   		model.add(b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
+				model.add(b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
+				model.add(c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
+		   		model.add(c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
+			}
+			model.add(wszystkieKlocki[i].x2 <= x_max);
+			model.add(wszystkieKlocki[i].y2 <= y_max);
+		}		
 	}
 	//ostatni warunek - suma
-	/*model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
-			  wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
-			  wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
-			  wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
-		      wszystkieKlocki[4].pole*wszystkieKlocki[4].p+
-			  wszystkieKlocki[5].pole*wszystkieKlocki[5].p+
-			  wszystkieKlocki[6].pole*wszystkieKlocki[6].p+
-			  wszystkieKlocki[7].pole*wszystkieKlocki[7].p+
-			  wszystkieKlocki[8].pole*wszystkieKlocki[8].p+
-			  wszystkieKlocki[9].pole*wszystkieKlocki[9].p+
-		      wszystkieKlocki[10].pole*wszystkieKlocki[10].p+
-			  wszystkieKlocki[11].pole*wszystkieKlocki[11].p+
-			  wszystkieKlocki[12].pole*wszystkieKlocki[12].p+
-			  wszystkieKlocki[13].pole*wszystkieKlocki[13].p+
-			  wszystkieKlocki[14].pole*wszystkieKlocki[14].p+
-			  wszystkieKlocki[15].pole*wszystkieKlocki[15].p+
-			  wszystkieKlocki[16].pole*wszystkieKlocki[16].p+
-			  wszystkieKlocki[18].pole*wszystkieKlocki[18].p+
-			  wszystkieKlocki[19].pole*wszystkieKlocki[19].p+
-			  wszystkieKlocki[20].pole*wszystkieKlocki[20].p+
-			  wszystkieKlocki[21].pole*wszystkieKlocki[21].p+
-			  wszystkieKlocki[22].pole*wszystkieKlocki[22].p+
-		      wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
-			  wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
-			  wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
-			  wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));     //4.15 */   
-	//Suma wszystkich pol
-	IloNum Sumapol=0;
-	for(int i=0;i<ILOSC_KLOCKOW;i++)
+	if(1==Wariant)
 	{
-		
-		Sumapol=Sumapol+wszystkieKlocki[i].pole;
+		model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
+			      wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
+			      wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
+			      wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
+		          wszystkieKlocki[4].pole*wszystkieKlocki[4].p+
+			      wszystkieKlocki[5].pole*wszystkieKlocki[5].p+
+			      wszystkieKlocki[6].pole*wszystkieKlocki[6].p+
+			      wszystkieKlocki[7].pole*wszystkieKlocki[7].p+
+			      wszystkieKlocki[8].pole*wszystkieKlocki[8].p+
+			      wszystkieKlocki[9].pole*wszystkieKlocki[9].p+
+		          wszystkieKlocki[10].pole*wszystkieKlocki[10].p+
+			      wszystkieKlocki[11].pole*wszystkieKlocki[11].p+
+			      wszystkieKlocki[12].pole*wszystkieKlocki[12].p+
+			      wszystkieKlocki[13].pole*wszystkieKlocki[13].p+
+			      wszystkieKlocki[14].pole*wszystkieKlocki[14].p+
+			      wszystkieKlocki[15].pole*wszystkieKlocki[15].p+
+			      wszystkieKlocki[16].pole*wszystkieKlocki[16].p+
+			      wszystkieKlocki[18].pole*wszystkieKlocki[18].p+
+			      wszystkieKlocki[19].pole*wszystkieKlocki[19].p+
+			      wszystkieKlocki[20].pole*wszystkieKlocki[20].p+
+			      wszystkieKlocki[21].pole*wszystkieKlocki[21].p+
+			      wszystkieKlocki[22].pole*wszystkieKlocki[22].p+
+		          wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
+			      wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
+			      wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
+			      wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));     //4.15 */   
 	}
  
-	//IloIntVar k(env, 0, ILOSC_KLOCKOW), f(env, 1, ILOSC_KLOCKOW);
-	//model.add(f>=k+1);
-	//model.add(wszystkieKlocki[f].x1 - wszystkieKlocki[k].x2 >0);
 
 	//dodanie do modelu celu - maksymalizacja tego równania
-	model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
+	if(1 == Wariant)
+	{
+		model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
 	/*model.add(IloMaximize(env, wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
 							   wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
 							   wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
@@ -179,7 +205,11 @@ int main()
 							   wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
 							   wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
 							   wszystkieKlocki[26].pole*wszystkieKlocki[26].p));*/
-		
+	}
+	else
+	{
+		model.add(IloMinimize(env, x_max + y_max));
+	}
 	
 
 
@@ -202,7 +232,10 @@ int main()
 		cout<< "x2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].x2)<<endl;
 		cout<< "y1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].y1)<<endl;
 		cout<< "y2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].y2)<<endl;
-		/*cout<< "d1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d1)<<endl;*/
+		cout<< "d1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d1)<<endl;
+		cout<< "d2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d2)<<endl;
+		cout<< "d3["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d3)<<endl;
+		cout<< "d4["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d4)<<endl;
 
 //	cplex.getValues( (const IloIntVarArray)iTabWybranych);
 	}
