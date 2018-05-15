@@ -15,7 +15,7 @@ ILOSTLBEGIN
 const unsigned int ILOSC_KLOCKOW = 27;
 
 IloInt a = 10;//gap frame
-IloInt b = 180, c = 180;
+IloInt b = 80, c = 80;
 
 class Klocek{
 public:
@@ -92,30 +92,27 @@ int main()
 	//ograniczenia
 	for(int i = 0; i<iIlosc; i++) //i to k
 	{ 
-		model.add(wszystkieKlocki[i].x1 >= a);
-		model.add(wszystkieKlocki[i].x2 <= b-a);
-		model.add(wszystkieKlocki[i].y1 >= a);
-		model.add(wszystkieKlocki[i].y2 <= c-a);
+		model.add(wszystkieKlocki[i].x1 >= a);                          //4.2
+		model.add(wszystkieKlocki[i].x2 <= b-a);                        //4.3
+		model.add(wszystkieKlocki[i].y1 >= a);							//4.4
+		model.add(wszystkieKlocki[i].y2 <= c-a);						//4.5
 			
 		model.add(wszystkieKlocki[i].x1 - wszystkieKlocki[i].x2 <0);
 		model.add(wszystkieKlocki[i].y1 - wszystkieKlocki[i].y2<0);  
 		
 		for(int j = i+1; j<iIlosc ; j++) //j to f
 		{
-			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);
-			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);
-			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);
-			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);
-
-			model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);
-
-			
-
+			model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);						//4.6
+			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
+			model.add(b*(1-wszystkieKlocki[i].p) + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
+			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
+			model.add(c*(1-wszystkieKlocki[i].p) + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
 		}
 		//model.add(wszystkieKlocki[i].pole == (wszystkieKlocki[i].x2 -wszystkieKlocki[i].x1) * (wszystkieKlocki[i].y2 -wszystkieKlocki[i].y1) );
-		//ostatni warunek - suma
+		
 	}
-	model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
+	//ostatni warunek - suma
+	/*model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
 			  wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
 			  wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
 			  wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
@@ -140,13 +137,13 @@ int main()
 		      wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
 			  wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
 			  wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
-			  wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));
+			  wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));     //4.15 */   
 	//Suma wszystkich pol
-	IloInt Sumapol=0;
-	for(int powt_petli=0;powt_petli<=ILOSC_KLOCKOW;powt_petli++)
+	IloNum Sumapol=0;
+	for(int i=0;i<ILOSC_KLOCKOW;i++)
 	{
 		
-		Sumapol=Sumapol+wszystkieKlocki[powt_petli].pole;
+		Sumapol=Sumapol+wszystkieKlocki[i].pole;
 	}
  
 	//IloIntVar k(env, 0, ILOSC_KLOCKOW), f(env, 1, ILOSC_KLOCKOW);
@@ -154,8 +151,8 @@ int main()
 	//model.add(wszystkieKlocki[f].x1 - wszystkieKlocki[k].x2 >0);
 
 	//dodanie do modelu celu - maksymalizacja tego równania
-	/*model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));*/
-	model.add(IloMaximize(env, wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
+	model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
+	/*model.add(IloMaximize(env, wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
 							   wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
 							   wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
 							   wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
@@ -172,6 +169,7 @@ int main()
 							   wszystkieKlocki[14].pole*wszystkieKlocki[14].p+
 							   wszystkieKlocki[15].pole*wszystkieKlocki[15].p+
 							   wszystkieKlocki[16].pole*wszystkieKlocki[16].p+
+					           wszystkieKlocki[17].pole*wszystkieKlocki[17].p+
 							   wszystkieKlocki[18].pole*wszystkieKlocki[18].p+
 							   wszystkieKlocki[19].pole*wszystkieKlocki[19].p+
 							   wszystkieKlocki[20].pole*wszystkieKlocki[20].p+
@@ -180,7 +178,7 @@ int main()
 							   wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
 							   wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
 							   wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
-							   wszystkieKlocki[26].pole*wszystkieKlocki[26].p));
+							   wszystkieKlocki[26].pole*wszystkieKlocki[26].p));*/
 		
 	
 
@@ -190,10 +188,26 @@ int main()
    // cplex.setOut(env.getNullStream());
     //cplex.setWarning(env.getNullStream());
     cplex.solve();
-
-	
+	cout << "-----------------------------------------------------------"<<endl;
+	cout << "status"<< cplex.getStatus()<<endl;
+	cout << "-----------------------------------------------------------"<<endl;
 	cout  << "Suma pol wszystkich klockow = "<< Sumapol << endl;
+	cout << "-----------------------------------------------------------"<<endl;
 	cout  << "Max po optymailizacji i ograniczeniach =" << cplex.getObjValue () << endl;
+	cout << "------------------------------------------------------------------------"<<endl;
+	for(int i = 0; i<ILOSC_KLOCKOW;i++)
+	{
+		cout<< "p["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
+		cout<< "x1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].x1)<<endl;
+		cout<< "x2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].x2)<<endl;
+		cout<< "y1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].y1)<<endl;
+		cout<< "y2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].y2)<<endl;
+		/*cout<< "d1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].d1)<<endl;*/
+
+//	cplex.getValues( (const IloIntVarArray)iTabWybranych);
+	}
+	cout << "-----------------------------------------------------------"<<endl;
+
   }
   catch (IloException& ex) {
     cerr << "Error: " << ex << endl;
