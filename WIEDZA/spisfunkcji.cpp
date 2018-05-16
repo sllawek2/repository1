@@ -18,3 +18,12 @@ IloIntVarArray
 IloNumVarArray
 IloBoolVarArray
 
+
+TODO:
+1. obczaić "node log"
+2. przetestować oba warianty - zobaczyć czy klocki są dobrze ustawione i czy to ma sens
+3. uporządkować kod
+4. emulator - ma losować klocki i zapisywać do pliku
+5. menu programu
+6. zrobić drugą werjsę na środkach zamiast na polach?
+
