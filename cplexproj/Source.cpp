@@ -12,7 +12,7 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 27;
+const unsigned int ILOSC_KLOCKOW = 4;
 
 IloInt a = 10;//gap frame
 IloInt b = 80, c = 180;
@@ -103,8 +103,8 @@ int main()
 		Sumapol=Sumapol+wszystkieKlocki[i].pole;
 	}
 
-	IloIntVar x_max;//uzyte tylko w drugim wariancie
-	IloIntVar y_max;//uzyte tylko w drugim wariancie
+	IloIntVar x_max(env, a, b-a);//uzyte tylko w drugim wariancie
+	IloIntVar y_max(env, a, c-a);//uzyte tylko w drugim wariancie
 
 	unsigned int Wariant = 1;
 	if(Sumapol < 0.75 * b*c)
@@ -234,7 +234,10 @@ int main()
 	cout << "------------------------------------------------------------------------"<<endl;
 	for(int i = 0; i<ILOSC_KLOCKOW;i++)
 	{
-		cout<< "p["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
+		if(1 == Wariant)
+		{
+			cout<< "p["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
+		}
 		cout<< "x1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].x1)<<endl;
 		cout<< "x2["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].x2)<<endl;
 		cout<< "y1["<<i<<"]="<<cplex.getValue(wszystkieKlocki[i].y1)<<endl;
