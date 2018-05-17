@@ -15,7 +15,7 @@ ILOSTLBEGIN
 const unsigned int ILOSC_KLOCKOW = 4;
 
 IloInt a = 10;//gap frame
-IloInt b = 80, c = 180;
+IloInt b = 100, c = 180;
 
 class Klocek{
 public:
@@ -24,7 +24,7 @@ public:
   {
 
   }
-//private:
+
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
   IloIntVar x1; //bli¿sza krawêdŸ na osi X
@@ -38,12 +38,12 @@ public:
   //box limit 180x180 //wymiary palety
   IloNum pole; //pole a*b
   IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
-  IloIntVar p;// 0 nie wybrany, 1 wybrany
+  IloBoolVar p;// 0 nie wybrany, 1 wybrany
   
-  IloIntVar d1;
-  IloIntVar d2;
-  IloIntVar d3;
-  IloIntVar d4;
+  IloBoolVar d1;
+  IloBoolVar d2;
+  IloBoolVar d3;
+  IloBoolVar d4;
 
 };
 
@@ -129,10 +129,10 @@ int main()
 		   for(int j = i+1; j<iIlosc ; j++) //j to f
 		   {
 		   		model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);			//4.6
-		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
-		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
-		   		model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
-				model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
+		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 -a >=0);		//4.11
+		   		model.add(b-b*wszystkieKlocki[i].p + b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 -a >=0);		//4.12
+		   		model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 -a >=0);		//4.13
+				model.add(c-c*wszystkieKlocki[i].p + c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 -a >=0);		//4.14
 		   }
 		}
 		else
@@ -140,10 +140,10 @@ int main()
 			for(int j = i+1; j<iIlosc ; j++) //j to f
 			{
 				model.add(wszystkieKlocki[i].d1+wszystkieKlocki[i].d2+wszystkieKlocki[i].d3+wszystkieKlocki[i].d4<=3);		//4.6
-		   		model.add(b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 +a >=0);		//4.11
-				model.add(b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 +a >=0);		//4.12
-				model.add(c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 +a >=0);		//4.13
-		   		model.add(c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 +a >=0);		//4.14
+		   		model.add(b*wszystkieKlocki[i].d1 + wszystkieKlocki[j].x1 - wszystkieKlocki[i].x2 -a >=0);		//4.11
+				model.add(b*wszystkieKlocki[i].d2 + wszystkieKlocki[i].x1 - wszystkieKlocki[j].x2 -a >=0);		//4.12
+				model.add(c*wszystkieKlocki[i].d3 + wszystkieKlocki[j].y1 - wszystkieKlocki[i].y2 -a >=0);		//4.13
+		   		model.add(c*wszystkieKlocki[i].d4 + wszystkieKlocki[i].y1 - wszystkieKlocki[j].y2 -a >=0);		//4.14
 			}
 			model.add(wszystkieKlocki[i].x2 <= x_max);
 			model.add(wszystkieKlocki[i].y2 <= y_max);
@@ -229,6 +229,7 @@ int main()
 	cout << "status"<< cplex.getStatus()<<endl;
 	cout << "-----------------------------------------------------------"<<endl;
 	cout  << "Suma pol wszystkich klockow = "<< Sumapol << endl;
+	cout  << "Pole palety = "<< c*b << endl;
 	cout << "-----------------------------------------------------------"<<endl;
 	cout  << "Max po optymailizacji i ograniczeniach =" << cplex.getObjValue () << endl;
 	cout << "------------------------------------------------------------------------"<<endl;
