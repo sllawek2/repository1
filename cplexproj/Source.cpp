@@ -44,7 +44,7 @@ public:
 
 };
 
-bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Klocek>& ref)
+bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Klocek> &ref)
 {
   fstream fInputFile;
   fInputFile.open(nazwa_pliku);
@@ -82,7 +82,7 @@ void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
   modelRef.add(klocek.y1 >= a);							//4.4
   modelRef.add(klocek.y2 <= c-a);						//4.5
   
-  modelRef.add(klocek.x1 + klocek.w + (klocek.h - klocek.w)*klocek.o - klocek.x2 == 0);//4.7 4.8
+  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
   modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
 }
 
@@ -179,15 +179,14 @@ int main()
   std::vector<Klocek> wszystkieKlocki;
   if(true == wczytanieDanych(env, "dane.txt",wszystkieKlocki))
   {
+
     try
     {
       IloModel model(env);
     
-      //IloInt iIlosc = ILOSC_KLOCKOW;//27 klocków w podajniku
-    
       //stworzenie tablicy pól wszystkich klocków
       IloNumArray iPola(env);
-      IloIntVarArray iTabWybranych(env);
+      IloBoolVarArray iTabWybranych(env);
       IloNum Sumapol=0;//suma wszystkich pol
       for(int i = 0; i<ILOSC_KLOCKOW; i++)
       {
@@ -212,7 +211,7 @@ int main()
     
         if(true == bPierwszyWariant)
         {
-          for(int j = i+1; j<ILOSC_KLOCKOW; j++)
+          for(int j = i+1; j<ILOSC_KLOCKOW; j++) //j to f
           {
             dodajOgraniczeniaPierwszegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
           }
@@ -223,8 +222,8 @@ int main()
           {
             dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
           }
- /*         model.add(wszystkieKlocki[i].x2 <= x_max);
-          model.add(wszystkieKlocki[i].y2 <= y_max);*/
+          model.add(wszystkieKlocki[i].x2 <= x_max);
+          model.add(wszystkieKlocki[i].y2 <= y_max);
         }
       }
     
@@ -267,19 +266,9 @@ int main()
       }
       else
       {
-        IloIntVarArray tabX(env);
-        IloIntVarArray tabY(env);
-       // model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
-        for(vector<Klocek>::iterator it = wszystkieKlocki.begin(); it<wszystkieKlocki.end();it++)
-        {
-          tabX.add(it->x2);
-          tabY.add(it->y2);
-          
-        }
-        model.add(IloMinimize(env,IloSum(tabX)+IloSum(tabY)));
+        model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
       }
     
-      // Optimize
       IloCplex cplex(model);
       cplex.setParam(IloCplex::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
@@ -290,6 +279,7 @@ int main()
       cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
       wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
       rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);
+
     }
     catch (IloException& ex) {
       cerr << "Error: " << ex << endl;
@@ -298,6 +288,7 @@ int main()
       cerr << "Error" << endl;
     }
   }
+  
   
   env.end();
 
