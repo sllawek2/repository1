@@ -9,10 +9,10 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 27;
+const unsigned int ILOSC_KLOCKOW = 4;
 
 IloInt a = 10;//gap frame
-IloInt b = 100, c = 180;
+IloInt b = 180, c = 180;
 
 class Klocek{
 public:
@@ -97,13 +97,11 @@ void dodajOgraniczeniaPierwszegoWariantu(IloModel& modelRef, const Klocek& kloce
 
 void dodajOgraniczeniaDrugiegoWariantu(IloModel& modelRef, const Klocek & klocek, const Klocek & kolejnyKlocek)
 {
-
-    modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);		//4.6
-    modelRef.add(b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
-    modelRef.add(b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
-    modelRef.add(c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
-    modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
-
+  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);		//4.6
+  modelRef.add(b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
+  modelRef.add(b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
+  modelRef.add(c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
+  modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
 }
 
 void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki)
@@ -135,6 +133,43 @@ void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, co
     }
   }
   cout << "-----------------------------------------------------------"<<endl;
+}
+
+void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
+{
+  char tablica[180][180];
+  memset(tablica,'.', 180*180);
+  for(int i = 0; i<ILOSC_KLOCKOW; i++)
+  {
+    if(false == bPierwszyWariant || true == cplex.getValue(wszystkieKlocki[i].p))
+    {
+      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<=cplex.getValue(wszystkieKlocki[i].x2);x++)
+      {
+        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<=cplex.getValue(wszystkieKlocki[i].y2);y++)
+        {
+          tablica[x][y] ='*';
+        }
+      }
+    }
+  }
+  
+  fstream outputFile;
+  outputFile.open("wynik.txt",'w');
+  if(outputFile.good())
+  {
+    for(int y=180 -1;y>=0;y--)
+    {
+      for(int x =0; x<180;x++)
+      {
+        outputFile<<tablica[x][y];
+      }
+      outputFile<<endl;
+    }
+  }
+  else
+  {
+    cout<<"problem z zapisem wyniku do pliku"<<endl;
+  }
 }
 
 int main()
@@ -188,8 +223,8 @@ int main()
           {
             dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
           }
-          model.add(wszystkieKlocki[i].x2 <= x_max);
-          model.add(wszystkieKlocki[i].y2 <= y_max);
+ /*         model.add(wszystkieKlocki[i].x2 <= x_max);
+          model.add(wszystkieKlocki[i].y2 <= y_max);*/
         }
       }
     
@@ -232,11 +267,21 @@ int main()
       }
       else
       {
-        model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
+        IloIntVarArray tabX(env);
+        IloIntVarArray tabY(env);
+       // model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
+        for(vector<Klocek>::iterator it = wszystkieKlocki.begin(); it<wszystkieKlocki.end();it++)
+        {
+          tabX.add(it->x2);
+          tabY.add(it->y2);
+          
+        }
+        model.add(IloMinimize(env,IloSum(tabX)+IloSum(tabY)));
       }
     
       // Optimize
       IloCplex cplex(model);
+      cplex.setParam(IloCplex::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
       cplex.solve();
@@ -244,7 +289,7 @@ int main()
     
       cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
       wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
-    
+      rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);
     }
     catch (IloException& ex) {
       cerr << "Error: " << ex << endl;
