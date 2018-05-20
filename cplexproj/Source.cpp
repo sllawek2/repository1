@@ -227,38 +227,6 @@ int main()
         }
       }
     
-	  ////ostatni warunek - suma
-	  //if(1==Wariant)
-	  //{
-	  //	model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
-	  //		      wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
-	  //		      wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
-	  //		      wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
-	  //	          wszystkieKlocki[4].pole*wszystkieKlocki[4].p+
-	  //		      wszystkieKlocki[5].pole*wszystkieKlocki[5].p+
-	  //		      wszystkieKlocki[6].pole*wszystkieKlocki[6].p+
-	  //		      wszystkieKlocki[7].pole*wszystkieKlocki[7].p+
-	  //		      wszystkieKlocki[8].pole*wszystkieKlocki[8].p+
-	  //		      wszystkieKlocki[9].pole*wszystkieKlocki[9].p+
-	  //	          wszystkieKlocki[10].pole*wszystkieKlocki[10].p+
-	  //		      wszystkieKlocki[11].pole*wszystkieKlocki[11].p+
-	  //		      wszystkieKlocki[12].pole*wszystkieKlocki[12].p+
-	  //		      wszystkieKlocki[13].pole*wszystkieKlocki[13].p+
-	  //		      wszystkieKlocki[14].pole*wszystkieKlocki[14].p+
-	  //		      wszystkieKlocki[15].pole*wszystkieKlocki[15].p+
-	  //		      wszystkieKlocki[16].pole*wszystkieKlocki[16].p+
-	  //		      wszystkieKlocki[18].pole*wszystkieKlocki[18].p+
-	  //		      wszystkieKlocki[19].pole*wszystkieKlocki[19].p+
-	  //		      wszystkieKlocki[20].pole*wszystkieKlocki[20].p+
-	  //		      wszystkieKlocki[21].pole*wszystkieKlocki[21].p+
-	  //		      wszystkieKlocki[22].pole*wszystkieKlocki[22].p+
-	  //	          wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
-	  //		      wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
-	  //		      wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
-	  //		      wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));     //4.15 ale ten warunek zawiera sie w 4.3 i 4.5   
-	  //}
-    
-    
       //dodanie do modelu celu
       if(true == bPierwszyWariant)
       {
@@ -266,7 +234,7 @@ int main()
       }
       else
       {
-        model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
+        model.add(IloMinimize(env, x_max + y_max));
       }
     
       IloCplex cplex(model);
