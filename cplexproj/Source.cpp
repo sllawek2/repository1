@@ -143,9 +143,9 @@ void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const v
   {
     if(false == bPierwszyWariant || true == cplex.getValue(wszystkieKlocki[i].p))
     {
-      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<=cplex.getValue(wszystkieKlocki[i].x2);x++)
+      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<cplex.getValue(wszystkieKlocki[i].x2);x++)
       {
-        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<=cplex.getValue(wszystkieKlocki[i].y2);y++)
+        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<cplex.getValue(wszystkieKlocki[i].y2);y++)
         {
           tablica[x][y] ='*';
         }
