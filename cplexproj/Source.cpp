@@ -1,5 +1,5 @@
 
-#include <ilcplex/ilocplex.h>
+#include <ilcp/cp.h>
 
 ILOSTLBEGIN
 
@@ -44,6 +44,8 @@ public:
 
 };
 
+int jednostka = 30;
+
 bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Klocek> &ref)
 {
   fstream fInputFile;
@@ -62,6 +64,9 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
         cout<<"bledne dane!!!!"<<endl;
         return false;
       }
+
+      a= a/jednostka;
+      b = b/jednostka;
 
       Klocek k(env,a,b);
       ref.push_back(k);
@@ -104,73 +109,73 @@ void dodajOgraniczeniaDrugiegoWariantu(IloModel& modelRef, const Klocek & klocek
   modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
 }
 
-void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki)
-{
-  cout << "-----------------------------------------------------------"<<endl;
-  cout << "status = "<< cplex.getStatus()<<endl;
-  cout << "-----------------------------------------------------------"<<endl;
-  if(true == bPierwszyWariant)
-  {
-    cout << "Max po optymalizacji i ograniczeniach =" << cplex.getObjValue() << endl;
-  }
-  else
-  {
-    cout <<"Minimum po optymalizacji i ograniczeniach ="<<cplex.getObjValue()<<endl;
-  }
-  cout << "------------------------------------------------------------------------"<<endl;
-  for(int i = 0; i<ILOSC_KLOCKOW;i++)
-  {
-    cout<< "klocek["<<i<<"]:"<<endl;
-    if(true == bPierwszyWariant)
-    {
-      cout<< "p="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
-    }
-    cout<< "\t[x1,y1]=["<<cplex.getValue(wszystkieKlocki[i].x1)<<","<<cplex.getValue(wszystkieKlocki[i].y1)<<"]"<<endl;
-    cout<< "\t[x2,y2]=["<<cplex.getValue(wszystkieKlocki[i].x2)<<","<<cplex.getValue(wszystkieKlocki[i].y2)<<"]"<<endl;
-    if(i<ILOSC_KLOCKOW-1)//poniewaz d nie sa dodawane dla ostatniego klocka
-    {
-      cout<< "\td1,d2,d3,d4=["<<cplex.getValue(wszystkieKlocki[i].d1)<<cplex.getValue(wszystkieKlocki[i].d2)<<cplex.getValue(wszystkieKlocki[i].d3)<<cplex.getValue(wszystkieKlocki[i].d4)<<"]"<<endl;
-    }
-  }
-  cout << "-----------------------------------------------------------"<<endl;
-}
+//void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki)
+//{
+//  cout << "-----------------------------------------------------------"<<endl;
+//  cout << "status = "<< cplex.getStatus()<<endl;
+//  cout << "-----------------------------------------------------------"<<endl;
+//  if(true == bPierwszyWariant)
+//  {
+//    cout << "Max po optymalizacji i ograniczeniach =" << cplex.getObjValue() << endl;
+//  }
+//  else
+//  {
+//    cout <<"Minimum po optymalizacji i ograniczeniach ="<<cplex.getObjValue()<<endl;
+//  }
+//  cout << "------------------------------------------------------------------------"<<endl;
+//  for(int i = 0; i<ILOSC_KLOCKOW;i++)
+//  {
+//    cout<< "klocek["<<i<<"]:"<<endl;
+//    if(true == bPierwszyWariant)
+//    {
+//      cout<< "p="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
+//    }
+//    cout<< "\t[x1,y1]=["<<cplex.getValue(wszystkieKlocki[i].x1)<<","<<cplex.getValue(wszystkieKlocki[i].y1)<<"]"<<endl;
+//    cout<< "\t[x2,y2]=["<<cplex.getValue(wszystkieKlocki[i].x2)<<","<<cplex.getValue(wszystkieKlocki[i].y2)<<"]"<<endl;
+//    if(i<ILOSC_KLOCKOW-1)//poniewaz d nie sa dodawane dla ostatniego klocka
+//    {
+//      cout<< "\td1,d2,d3,d4=["<<cplex.getValue(wszystkieKlocki[i].d1)<<cplex.getValue(wszystkieKlocki[i].d2)<<cplex.getValue(wszystkieKlocki[i].d3)<<cplex.getValue(wszystkieKlocki[i].d4)<<"]"<<endl;
+//    }
+//  }
+//  cout << "-----------------------------------------------------------"<<endl;
+//}
 
-void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
-{
-  char tablica[180][180];
-  memset(tablica,'.', 180*180);
-  for(int i = 0; i<ILOSC_KLOCKOW; i++)
-  {
-    if(false == bPierwszyWariant || true == cplex.getValue(wszystkieKlocki[i].p))
-    {
-      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<cplex.getValue(wszystkieKlocki[i].x2);x++)
-      {
-        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<cplex.getValue(wszystkieKlocki[i].y2);y++)
-        {
-          tablica[x][y] ='*';
-        }
-      }
-    }
-  }
-  
-  fstream outputFile;
-  outputFile.open("wynik.txt",'w');
-  if(outputFile.good())
-  {
-    for(int y=180 -1;y>=0;y--)
-    {
-      for(int x =0; x<180;x++)
-      {
-        outputFile<<tablica[x][y];
-      }
-      outputFile<<endl;
-    }
-  }
-  else
-  {
-    cout<<"problem z zapisem wyniku do pliku"<<endl;
-  }
-}
+//void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
+//{
+//  char tablica[180][180];
+//  memset(tablica,'.', 180*180);
+//  for(int i = 0; i<ILOSC_KLOCKOW; i++)
+//  {
+//    if(false == bPierwszyWariant || true == cplex.getValue(wszystkieKlocki[i].p))
+//    {
+//      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<cplex.getValue(wszystkieKlocki[i].x2);x++)
+//      {
+//        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<cplex.getValue(wszystkieKlocki[i].y2);y++)
+//        {
+//          tablica[x][y] ='*';
+//        }
+//      }
+//    }
+//  }
+//  
+//  fstream outputFile;
+//  outputFile.open("wynik.txt",'w');
+//  if(outputFile.good())
+//  {
+//    for(int y=180 -1;y>=0;y--)
+//    {
+//      for(int x =0; x<180;x++)
+//      {
+//        outputFile<<tablica[x][y];
+//      }
+//      outputFile<<endl;
+//    }
+//  }
+//  else
+//  {
+//    cout<<"problem z zapisem wyniku do pliku"<<endl;
+//  }
+//}
 
 int main()
 {
@@ -237,16 +242,16 @@ int main()
         model.add(IloMinimize(env, x_max + y_max));
       }
     
-      IloCplex cplex(model);
-      cplex.setParam(IloCplex::TiLim, 60);//limit czasowy
+      IloCP cp(model);
+     // cp.setParam(IloCP::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
-      cplex.solve();
+      cp.solve();
     
     
       cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
-      wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
-      rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);
+ /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
+      rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);*/
 
     }
     catch (IloException& ex) {
