@@ -195,94 +195,64 @@ void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const v
   }
 }
 
-int main()
-{
+#include <ilcp/cp.h>
+
+int main(int, const char * []) {
   IloEnv env;
-
-  std::vector<Klocek> wszystkieKlocki;
-  if(true == wczytanieDanych(env, "dane.txt",wszystkieKlocki))
-  {
-
-    try
-    {
-      IloModel model(env);
-    
-      //stworzenie tablicy pól wszystkich klocków
-      IloNumArray iPola(env);
-      IloBoolVarArray iTabWybranych(env);
-      IloNum Sumapol=0;//suma wszystkich pol
-      for(int i = 0; i<ILOSC_KLOCKOW; i++)
-      {
-        iPola.add(wszystkieKlocki[i].pole);
-        iTabWybranych.add(wszystkieKlocki[i].p);
-        Sumapol=Sumapol+wszystkieKlocki[i].pole;
-      }
-    
-      IloIntVar x_max(env, a, b-a);//uzyte tylko w drugim wariancie
-      IloIntVar y_max(env, a, c-a);//uzyte tylko w drugim wariancie
-      
-      bool bPierwszyWariant = true;
-      if(Sumapol < 0.75 * b*c)
-      {
-        bPierwszyWariant = false;
-      }
-    
-      //ograniczenia
-      for(int i = 0; i<ILOSC_KLOCKOW; i++) //i to k 
-      {
-        dodajWspolneOgraniczenia(model, wszystkieKlocki[i]);
-    
-        if(true == bPierwszyWariant)
-        {
-          for(int j = i+1; j<ILOSC_KLOCKOW; j++) //j to f
-          {
-            dodajOgraniczeniaPierwszegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
-          }
-        }
-        else
-        {
-          for(int j = i+1; j<ILOSC_KLOCKOW ; j++) //j to f
-          {
-            dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
-          }
-          model.add(wszystkieKlocki[i].x2 <= x_max);
-          model.add(wszystkieKlocki[i].y2 <= y_max);
-        }
-      }
-    
-      //dodanie do modelu celu
-      if(true == bPierwszyWariant)
-      {
-        model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
-      }
-      else
-      {
-        model.add(IloMinimize(env, x_max + y_max));
-      }
-    
-      IloCplex cplex(model);
-      cplex.setParam(IloCplex::TiLim, 60);//limit czasowy
-     // cplex.setOut(env.getNullStream());
-      //cplex.setWarning(env.getNullStream());
-      cplex.solve();
-    
-    
-      cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
-      wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
-      rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);
-
+  try {
+    IloModel model(env);
+    IloInt i,j;
+    IloInt sizeSquare = 112;
+    IloInt nbSquares  = 21;
+    IloIntArray size(env, nbSquares, 50,42,37,35,33,29,27,25,24,19,18,17,16,15,11,9,8,7,6,4,2);
+    IloIntervalVarArray x(env, nbSquares);
+    IloIntervalVarArray y(env, nbSquares);
+    IloCumulFunctionExpr rx(env);
+    IloCumulFunctionExpr ry(env);
+    char name[16];
+	
+	IloNumExpr obj(env);
+    for (i=0; i<nbSquares; ++i) {
+      sprintf(name, "X%ld", i);
+      x[i] = IloIntervalVar(env, size[i], name);
+      x[i].setEndMax(sizeSquare);
+	  x[i].setOptional();
+      sprintf(name, "Y%ld", i);
+      y[i] = IloIntervalVar(env, size[i], name);
+      y[i].setEndMax(sizeSquare);
+	  y[i].setOptional();
+      rx += IloPulse(x[i], size[i]);
+      ry += IloPulse(y[i], size[i]);
+      for (j=0; j<i; ++j)
+        model.add((IloEndOf(x[i]) <= IloStartOf(x[j])) ||
+                  (IloEndOf(x[j]) <= IloStartOf(x[i])) ||
+                  (IloEndOf(y[i]) <= IloStartOf(y[j])) ||
+                  (IloEndOf(y[j]) <= IloStartOf(y[i])));
+				  
+      obj+=(IloEndOf(x[i])-IloStartOf(x[i])) * (IloEndOf(y[i])-IloStartOf(y[i]) );
     }
-    catch (IloException& ex) {
-      cerr << "Error: " << ex << endl;
+	
+    model.add(IloAlwaysIn(env, rx, 0, sizeSquare, sizeSquare, sizeSquare));
+    model.add(IloAlwaysIn(env, ry, 0, sizeSquare, sizeSquare, sizeSquare));
+	
+	model.add(IloMaximize(obj);
+
+    IloCP cp(model);
+    IloSearchPhaseArray phases(env);
+    phases.add(IloSearchPhase(env, x));
+    phases.add(IloSearchPhase(env, y));
+    if (cp.solve(phases)) {
+      for (i=0; i<nbSquares; ++i) {
+        cp.out() << "Square " << i << ": ["
+                 << cp.getStart(x[i]) << "," << cp.getEnd(x[i])
+                 << "] x ["
+                 << cp.getStart(y[i]) << "," << cp.getEnd(y[i])
+                 << "]" << std::endl;
+      }
     }
-    catch (...) {
-      cerr << "Error" << endl;
-    }
+  } catch (IloException& ex) {
+    env.out() << "Caught: " << ex << std::endl;
   }
-  
-  
   env.end();
-
-  getchar();//stop 
   return 0;
 }
