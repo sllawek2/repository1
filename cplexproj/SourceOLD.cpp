@@ -10,25 +10,18 @@ ILOSTLBEGIN
 
 	
 const unsigned int ILOSC_KLOCKOW = 4;
-const unsigned int JEDNOSTKA = 30;
 
-///liczymy od 0 czy 1?
-
-IloInt a = 1;//poczatek ukladu
-IloInt b = 180 / JEDNOSTKA, c = 180 / JEDNOSTKA;//koniec ukladu
-
-unsigned short tab[a][b] = {0};
+IloInt a = 10;//gap frame
+IloInt b = 180, c = 180;
 
 class Klocek{
 public:
-  Klocek(const IloEnv &env,unsigned int w, unsigned int h, int nrKlocka):
-	  w(w),o(env,0,1),h(h),pole(w*h),p(env,0,1), x1(env, a, b), x2(env, a, b),y1(env, a, c), y2(env, a, c), d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1), nrKlocka(nrKlocka)
+  Klocek(const IloEnv &env,unsigned int w, unsigned int h):
+	  w(w),o(env,0,1),h(h),pole(w*h),p(env,0,1), x1(env, a, b-a), x2(env, a, b-a),y1(env, a, c-a), y2(env, a, c-a), d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
   {
 
   }
 
-  int nrKlocka;
-  
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
   IloIntVar x1; //bli¿sza krawêdŸ na osi X
@@ -49,11 +42,7 @@ public:
   IloBoolVar d3;
   IloBoolVar d4;
 
-  
-  IloArray<IloArray<IloIntVarArray> > tab;
 };
-
-
 
 bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Klocek> &ref)
 {
@@ -73,11 +62,8 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
         cout<<"bledne dane!!!!"<<endl;
         return false;
       }
-      
-	  a = a/JEDNOSTKA;
-	  b = b/JEDNOSTKA;
-	  
-      Klocek k(env,a,b, i+1);
+
+      Klocek k(env,a,b);
       ref.push_back(k);
     }
     return true;
@@ -92,21 +78,12 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
 void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
 {
   modelRef.add(klocek.x1 >= a);                          //4.2
-  modelRef.add(klocek.x2 <= b);                        //4.3
+  modelRef.add(klocek.x2 <= b-a);                        //4.3
   modelRef.add(klocek.y1 >= a);							//4.4
-  modelRef.add(klocek.y2 <= c);						//4.5
+  modelRef.add(klocek.y2 <= c-a);						//4.5
   
-  for(int i = 0; i<a; i++)
-  {
-	for(int j = 0; j<b; j++)
-	{
-	  klocek.tab[i][j]
-	}
-  }
-  
-  
-//  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
-//  modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
+  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
+  modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
 }
 
 void dodajOgraniczeniaPierwszegoWariantu(IloModel& modelRef, const Klocek& klocek, const Klocek& kolejnyKlocek)
