@@ -84,13 +84,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cplex\include;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\concert\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cpoptimizer\include;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\concert\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_CONSOLE;IL_STD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cplex\lib\x64_windows_vs2012\stat_mda\cplex1263.lib;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cplex\lib\x64_windows_vs2012\stat_mda\ilocplex.lib;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\concert\lib\x64_windows_vs2012\stat_mda\concert.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cplex\lib\x64_windows_vs2012\stat_mda\cplex1263.lib;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cplex\lib\x64_windows_vs2012\stat_mda\ilocplex.lib;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\concert\lib\x64_windows_vs2012\stat_mda\concert.lib;C:\Program Files\IBM\ILOG\CPLEX_Studio1263\cpoptimizer\lib\x64_windows_vs2012\stat_mda\cp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
