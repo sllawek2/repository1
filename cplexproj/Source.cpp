@@ -11,23 +11,32 @@ ILOSTLBEGIN
 	
 const unsigned int ILOSC_KLOCKOW = 4;
 
-IloInt a = 10;//gap frame
-IloInt b = 180, c = 180;
+const IloInt a = 10;//gap frame
+const IloInt b = 180, c = 180;
+const int jednostka = 30;
+const int wymiarX=b/jednostka;
+const int wymiarY=c/jednostka;
 
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),o(env,0,1),h(h),pole(w*h),p(env,0,1), x1(env, a, b-a), x2(env, a, b-a),y1(env, a, c-a), y2(env, a, c-a), d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
+	  w(w),o(env,0,1),h(h),pole(w*h),p(env,0,1), d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
   {
-
+    for(int i =0; i<wymiarX; i++)
+    {
+      for(int j=0;j<wymiarY;j++)
+      {
+        tablica[i][j]=IloIntVar(env);
+      }
+    }
   }
 
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
-  IloIntVar x1; //bli¿sza krawêdŸ na osi X
-  IloIntVar x2; //dalsza krawêdŸ na osi X
-  IloIntVar y1;
-  IloIntVar y2;
+ // IloIntVar x1; //bli¿sza krawêdŸ na osi X
+  //IloIntVar x2; //dalsza krawêdŸ na osi X
+ // IloIntVar y1;
+  //IloIntVar y2;
   //IloIntVar x; //po³o¿enie œrodka produktu
   //IloIntVar y;
   //gap = 3 //odstêp pomiedzy produktami
@@ -41,10 +50,10 @@ public:
   IloBoolVar d2;
   IloBoolVar d3;
   IloBoolVar d4;
-
+  IloIntVar tablica[wymiarX][wymiarY];
 };
 
-int jednostka = 30;
+
 
 bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Klocek> &ref)
 {
@@ -80,34 +89,37 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
   }
 }
 
-void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
-{
-  modelRef.add(klocek.x1 >= a);                          //4.2
-  modelRef.add(klocek.x2 <= b-a);                        //4.3
-  modelRef.add(klocek.y1 >= a);							//4.4
-  modelRef.add(klocek.y2 <= c-a);						//4.5
-  
-  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
-  modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
-}
+//void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
+//{
+//  modelRef.add(klocek.x1 >= a);                          //4.2
+//  modelRef.add(klocek.x2 <= b-a);                        //4.3
+//  modelRef.add(klocek.y1 >= a);							//4.4
+//  modelRef.add(klocek.y2 <= c-a);						//4.5
+//  
 
-void dodajOgraniczeniaPierwszegoWariantu(IloModel& modelRef, const Klocek& klocek, const Klocek& kolejnyKlocek)
-{
-  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);			//4.6
-  modelRef.add(b-b*klocek.p + b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
-  modelRef.add(b-b*klocek.p + b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
-  modelRef.add(c-c*klocek.p + c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
-  modelRef.add(c-c*klocek.p + c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
-}
 
-void dodajOgraniczeniaDrugiegoWariantu(IloModel& modelRef, const Klocek & klocek, const Klocek & kolejnyKlocek)
-{
-  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);		//4.6
-  modelRef.add(b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
-  modelRef.add(b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
-  modelRef.add(c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
-  modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
-}
+
+//  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
+//  modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
+//}
+
+//void dodajOgraniczeniaPierwszegoWariantu(IloModel& modelRef, const Klocek& klocek, const Klocek& kolejnyKlocek)
+//{
+//  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);			//4.6
+//  modelRef.add(b-b*klocek.p + b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
+//  modelRef.add(b-b*klocek.p + b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
+//  modelRef.add(c-c*klocek.p + c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
+//  modelRef.add(c-c*klocek.p + c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
+//}
+//
+//void dodajOgraniczeniaDrugiegoWariantu(IloModel& modelRef, const Klocek & klocek, const Klocek & kolejnyKlocek)
+//{
+//  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);		//4.6
+//  modelRef.add(b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
+//  modelRef.add(b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
+//  modelRef.add(c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
+//  modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
+//}
 
 //void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki)
 //{
@@ -210,27 +222,80 @@ int main()
       }
     
       //ograniczenia
-      for(int i = 0; i<ILOSC_KLOCKOW; i++) //i to k 
+      for(int i = 0; i<wymiarX; i++)
       {
-        dodajWspolneOgraniczenia(model, wszystkieKlocki[i]);
-    
-        if(true == bPierwszyWariant)
+        for(int j=0;j<wymiarY;j++)
         {
-          for(int j = i+1; j<ILOSC_KLOCKOW; j++) //j to f
+          IloIntExpr suma(env);
+
+          for(int k = 0;k <ILOSC_KLOCKOW; k++)
           {
-            dodajOgraniczeniaPierwszegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
+            IloExpr obj1();
+     /*       for(int l = i+wszystkieKlocki[k].w; l<jednostka; l++)
+            {
+              wszystkieKlocki[k].tablica[i][j]+*/
+            //wszystkieKlocki[k].o;
+
+            //alternatywny sposób
+            IloIntExpr bezObrotuX(env);
+
+
+            IloIntExpr bezObrotuY=wszystkieKlocki[k].tablica[i][0];
+            IloIntExpr zObrotemX=wszystkieKlocki[k].tablica[i][0];
+            IloIntExpr zObrotemY=wszystkieKlocki[k].tablica[0][j];
+            suma += wszystkieKlocki[k].tablica[i][j];
+            for(int l =1;l<wszystkieKlocki[k].w, l<wymiarX;l++)
+            {
+              bezObrotuX+=wszystkieKlocki[k].tablica[l][j];
+              zObrotemY+=wszystkieKlocki[k].tablica[l][j];
+            }
+            for(int l = 1 ; l<wszystkieKlocki[k].h, l<wymiarY;l++)
+            {
+              bezObrotuY+=wszystkieKlocki[k].tablica[i][l];
+              zObrotemX+=wszystkieKlocki[k].tablica[i][l];
+            }
+
+            model.add((bezObrotuX == wszystkieKlocki[k].w && bezObrotuY == wszystkieKlocki[k].h) ||
+                      (zObrotemX == wszystkieKlocki[k].h && zObrotemY == wszystkieKlocki[k].w));
           }
-        }
-        else
-        {
-          for(int j = i+1; j<ILOSC_KLOCKOW ; j++) //j to f
-          {
-            dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
-          }
-          model.add(wszystkieKlocki[i].x2 <= x_max);
-          model.add(wszystkieKlocki[i].y2 <= y_max);
+          model.add(suma <= 1);
         }
       }
+
+
+//dla ka¿dej tablicy suma wierszy/kolumn = w lub h lub 0
+
+
+
+
+
+
+
+
+
+
+
+      //for(int i = 0; i<ILOSC_KLOCKOW; i++) //i to k 
+      //{
+      //  //dodajWspolneOgraniczenia(model, wszystkieKlocki[i]);
+      //  wszystkieKlocki[i].x1+
+      //  if(true == bPierwszyWariant)
+      //  {
+      //    for(int j = i+1; j<ILOSC_KLOCKOW; j++) //j to f
+      //    {
+      //      dodajOgraniczeniaPierwszegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
+      //    }
+      //  }
+      //  else
+      //  {
+      //    for(int j = i+1; j<ILOSC_KLOCKOW ; j++) //j to f
+      //    {
+      //      dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
+      //    }
+      //    model.add(wszystkieKlocki[i].x2 <= x_max);
+      //    model.add(wszystkieKlocki[i].y2 <= y_max);
+      //  }
+      //}
     
       //dodanie do modelu celu
       if(true == bPierwszyWariant)
