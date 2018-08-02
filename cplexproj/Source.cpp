@@ -9,9 +9,8 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 4;
+const unsigned int ILOSC_KLOCKOW = 1;
 
-const IloInt a = 10;//gap frame
 const IloInt b = 180, c = 180;
 const int jednostka = 30;
 const int wymiarX=b/jednostka;
@@ -20,13 +19,13 @@ const int wymiarY=c/jednostka;
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),o(env,0,1),h(h),pole(w*h),p(env,0,1), d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
+	  w(w),o(env,0,1),h(h),p(env,0,1)//, d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
   {
     for(int i =0; i<wymiarX; i++)
     {
       for(int j=0;j<wymiarY;j++)
       {
-        tablica[i][j]=IloIntVar(env);
+        tablica[i][j]=IloBoolVar(env,0,1);
       }
     }
   }
@@ -42,14 +41,14 @@ public:
   //gap = 3 //odstêp pomiedzy produktami
   //gap frame = 10 //przerwa pomiêdzy palet¹ a produktami
   //box limit 180x180 //wymiary palety
-  IloNum pole; //pole a*b
+  //IloNum pole; //pole a*b
   IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
   IloBoolVar p;// 0 nie wybrany, 1 wybrany
   
-  IloBoolVar d1;
-  IloBoolVar d2;
-  IloBoolVar d3;
-  IloBoolVar d4;
+  //IloBoolVar d1;
+  //IloBoolVar d2;
+  //IloBoolVar d3;
+  //IloBoolVar d4;
   IloIntVar tablica[wymiarX][wymiarY];
 };
 
@@ -68,11 +67,11 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
       std::getline(fInputFile,sLine);
       std::stringstream stream(sLine);
       stream>>a>>b;
-      if(a>80 || a<30 || b>50 || b<30)
-      {
-        cout<<"bledne dane!!!!"<<endl;
-        return false;
-      }
+      //if(a>80 || a<30 || b>50 || b<30)
+      //{
+      //  cout<<"bledne dane!!!!"<<endl;
+      //  return false;
+      //}
 
       a= a/jednostka;
       b = b/jednostka;
@@ -89,105 +88,48 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
   }
 }
 
-//void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
-//{
-//  modelRef.add(klocek.x1 >= a);                          //4.2
-//  modelRef.add(klocek.x2 <= b-a);                        //4.3
-//  modelRef.add(klocek.y1 >= a);							//4.4
-//  modelRef.add(klocek.y2 <= c-a);						//4.5
-//  
+void rysowanieWPliku(const IloCP &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
+{
+  char tablica[wymiarX][wymiarY];
+  char znaki[] ={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'};
+
+  memset(tablica,'.', wymiarX*wymiarY);
+  for(int i = 0; i<ILOSC_KLOCKOW; i++)
+  {
+    for(int x=0;x<wymiarX;x++)
+    {
+      for(int y=0;y<wymiarY;y++)
+      {
+        cout<<cplex.getValue(wszystkieKlocki[i].tablica[x][y]);
+        if(cplex.getValue(wszystkieKlocki[i].tablica[x][y])==1)
+        {
+          tablica[x][y]= znaki[i];
+        }
+      }
+      cout<<endl;
+    }
+    cout<<endl;
+  }
 
 
-
-//  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
-//  modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
-//}
-
-//void dodajOgraniczeniaPierwszegoWariantu(IloModel& modelRef, const Klocek& klocek, const Klocek& kolejnyKlocek)
-//{
-//  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);			//4.6
-//  modelRef.add(b-b*klocek.p + b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
-//  modelRef.add(b-b*klocek.p + b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
-//  modelRef.add(c-c*klocek.p + c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
-//  modelRef.add(c-c*klocek.p + c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
-//}
-//
-//void dodajOgraniczeniaDrugiegoWariantu(IloModel& modelRef, const Klocek & klocek, const Klocek & kolejnyKlocek)
-//{
-//  modelRef.add(klocek.d1+klocek.d2+klocek.d3+klocek.d4<=3);		//4.6
-//  modelRef.add(b*klocek.d1 + kolejnyKlocek.x1 - klocek.x2 -a >=0);		//4.11
-//  modelRef.add(b*klocek.d2 + klocek.x1 - kolejnyKlocek.x2 -a >=0);		//4.12
-//  modelRef.add(c*klocek.d3 + kolejnyKlocek.y1 - klocek.y2 -a >=0);		//4.13
-//  modelRef.add(c*klocek.d4 + klocek.y1 - kolejnyKlocek.y2 -a >=0);		//4.14
-//}
-
-//void wyswietlenieWynikow(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki)
-//{
-//  cout << "-----------------------------------------------------------"<<endl;
-//  cout << "status = "<< cplex.getStatus()<<endl;
-//  cout << "-----------------------------------------------------------"<<endl;
-//  if(true == bPierwszyWariant)
-//  {
-//    cout << "Max po optymalizacji i ograniczeniach =" << cplex.getObjValue() << endl;
-//  }
-//  else
-//  {
-//    cout <<"Minimum po optymalizacji i ograniczeniach ="<<cplex.getObjValue()<<endl;
-//  }
-//  cout << "------------------------------------------------------------------------"<<endl;
-//  for(int i = 0; i<ILOSC_KLOCKOW;i++)
-//  {
-//    cout<< "klocek["<<i<<"]:"<<endl;
-//    if(true == bPierwszyWariant)
-//    {
-//      cout<< "p="<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
-//    }
-//    cout<< "\t[x1,y1]=["<<cplex.getValue(wszystkieKlocki[i].x1)<<","<<cplex.getValue(wszystkieKlocki[i].y1)<<"]"<<endl;
-//    cout<< "\t[x2,y2]=["<<cplex.getValue(wszystkieKlocki[i].x2)<<","<<cplex.getValue(wszystkieKlocki[i].y2)<<"]"<<endl;
-//    if(i<ILOSC_KLOCKOW-1)//poniewaz d nie sa dodawane dla ostatniego klocka
-//    {
-//      cout<< "\td1,d2,d3,d4=["<<cplex.getValue(wszystkieKlocki[i].d1)<<cplex.getValue(wszystkieKlocki[i].d2)<<cplex.getValue(wszystkieKlocki[i].d3)<<cplex.getValue(wszystkieKlocki[i].d4)<<"]"<<endl;
-//    }
-//  }
-//  cout << "-----------------------------------------------------------"<<endl;
-//}
-
-//void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
-//{
-//  char tablica[180][180];
-//  memset(tablica,'.', 180*180);
-//  for(int i = 0; i<ILOSC_KLOCKOW; i++)
-//  {
-//    if(false == bPierwszyWariant || true == cplex.getValue(wszystkieKlocki[i].p))
-//    {
-//      for(int x=cplex.getValue(wszystkieKlocki[i].x1);x<cplex.getValue(wszystkieKlocki[i].x2);x++)
-//      {
-//        for(int y=cplex.getValue(wszystkieKlocki[i].y1);y<cplex.getValue(wszystkieKlocki[i].y2);y++)
-//        {
-//          tablica[x][y] ='*';
-//        }
-//      }
-//    }
-//  }
-//  
-//  fstream outputFile;
-//  outputFile.open("wynik.txt",'w');
-//  if(outputFile.good())
-//  {
-//    for(int y=180 -1;y>=0;y--)
-//    {
-//      for(int x =0; x<180;x++)
-//      {
-//        outputFile<<tablica[x][y];
-//      }
-//      outputFile<<endl;
-//    }
-//  }
-//  else
-//  {
-//    cout<<"problem z zapisem wyniku do pliku"<<endl;
-//  }
-//}
+  fstream outputFile;
+  outputFile.open("wynik.txt",'w');
+  if(outputFile.good())
+  {
+    for(int y=wymiarY -1;y>=0;y--)
+    {
+      for(int x =0; x<wymiarX;x++)
+      {
+        outputFile<<tablica[x][y];
+      }
+      outputFile<<endl;
+    }
+  }
+  else
+  {
+    cout<<"problem z zapisem wyniku do pliku"<<endl;
+  }
+}
 
 int main()
 {
@@ -202,42 +144,99 @@ int main()
       IloModel model(env);
     
       //stworzenie tablicy pól wszystkich klocków
-      IloNumArray iPola(env);
-      IloBoolVarArray iTabWybranych(env);
       IloNum Sumapol=0;//suma wszystkich pol
+      IloIntExpr poleMax(env);
       for(int i = 0; i<ILOSC_KLOCKOW; i++)
       {
-        iPola.add(wszystkieKlocki[i].pole);
+        for(int x=0; x<wymiarX;x++)
+        {
+          for(int y=0;y<wymiarY;y++)
+          {
+            poleMax+=wszystkieKlocki[i].tablica[x][y];
+          }
+        }
+    /*    iPola.add(wszystkieKlocki[i].pole);
         iTabWybranych.add(wszystkieKlocki[i].p);
-        Sumapol=Sumapol+wszystkieKlocki[i].pole;
+        Sumapol=Sumapol+wszystkieKlocki[i].pole;*/
       }
     
-      IloIntVar x_max(env, a, b-a);//uzyte tylko w drugim wariancie
-      IloIntVar y_max(env, a, c-a);//uzyte tylko w drugim wariancie
+      //IloIntVar x_max(env, a, b-a);//uzyte tylko w drugim wariancie
+      //IloIntVar y_max(env, a, c-a);//uzyte tylko w drugim wariancie
       
       bool bPierwszyWariant = true;
-      if(Sumapol < 0.75 * b*c)
+   /*   if(Sumapol < 0.75 * wymiarX*wymiarY)
       {
         bPierwszyWariant = false;
-      }
+      }*/
     
       //ograniczenia
-      for(int i = 0; i<wymiarX; i++)
+      for(int x = 0; x<wymiarX; x++)
       {
-        for(int j=0;j<wymiarY;j++)
+        for(int y=0;y<wymiarY;y++)
         {
           IloIntExpr suma(env);
 
-          for(int k = 0;k <ILOSC_KLOCKOW; k++)
+          for(int i = 0;i <ILOSC_KLOCKOW; i++)
           {
-            IloExpr obj1();
+            for(int j = i+1 ; j<ILOSC_KLOCKOW; j++)
+            {
+              model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[j].tablica[x][y] <=1 );//warunek ¿eby klocki na siebie nie nachodzi³y
+            }
+          }
+        }
+      }
+
+      for(int i=0;i<ILOSC_KLOCKOW;i++)//suma w wierszu
+      {
+        for(int x =0;x<wymiarX;x++)
+        {
+          IloIntExpr suma1(env);
+          for(int y =0; y<wymiarY;y++)
+          {
+            suma1+=wszystkieKlocki[i].tablica[x][y];
+          }
+          model.add(suma1==0||suma1 == wszystkieKlocki[i].w /*+wszystkieKlocki[k].h*wszystkieKlocki[k].o - wszystkieKlocki[k].w*wszystkieKlocki[k].o*/);
+        }
+     // suma w kolumnie (mo¿liwe ¿e odwrotnie trzeba wysokoœæ i szerokoœæ daæ)
+        for(int y =0; y<wymiarY;y++)
+        {
+          IloIntExpr suma2(env);
+          for(int x =0;x<wymiarX;x++)
+          {
+            suma2+=wszystkieKlocki[i].tablica[x][y];
+          }
+          model.add(suma2==0||suma2 == wszystkieKlocki[i].h /*+wszystkieKlocki[k].w*wszystkieKlocki[k].o - wszystkieKlocki[k].h*wszystkieKlocki[k].o*/);//tu chyba ma byæ odwrotnie
+        }
+      }
+
+      for(int k=0;k<ILOSC_KLOCKOW;k++)
+      {
+        
+        for(int i=1;i<wymiarX-1;i++)
+        {
+          for(int j=1;j<wymiarY-1;j++)
+          {
+            if(wszystkieKlocki[k].w>1 && wszystkieKlocki[k].h>1)
+            {
+            model.add((wszystkieKlocki[k].tablica[i][j]+wszystkieKlocki[k].tablica[i][j+1]==2*wszystkieKlocki[k].tablica[i][j] ||
+                       wszystkieKlocki[k].tablica[i][j]+wszystkieKlocki[k].tablica[i][j+1]==2*wszystkieKlocki[k].tablica[i][j]));
+           model.add((wszystkieKlocki[k].tablica[i][j]+wszystkieKlocki[k].tablica[i+1][j]==2*wszystkieKlocki[k].tablica[i][j] ||
+                       wszystkieKlocki[k].tablica[i][j]+wszystkieKlocki[k].tablica[i-1][j]==2*wszystkieKlocki[k].tablica[i][j]));
+            }
+
+
+          }
+        }
+      }
+
+
      /*       for(int l = i+wszystkieKlocki[k].w; l<jednostka; l++)
             {
               wszystkieKlocki[k].tablica[i][j]+*/
             //wszystkieKlocki[k].o;
 
             //alternatywny sposób
-            IloIntExpr bezObrotuX(env);
+           /* IloIntExpr bezObrotuX(env);
 
 
             IloIntExpr bezObrotuY=wszystkieKlocki[k].tablica[i][0];
@@ -261,7 +260,7 @@ int main()
           model.add(suma <= 1);
         }
       }
-
+*/
 
 //dla ka¿dej tablicy suma wierszy/kolumn = w lub h lub 0
 
@@ -300,24 +299,28 @@ int main()
       //dodanie do modelu celu
       if(true == bPierwszyWariant)
       {
-        model.add(IloMaximize(env ,IloScalProd(iPola,iTabWybranych)));
+        model.add(IloMaximize(env ,poleMax));
       }
       else
       {
-        model.add(IloMinimize(env, x_max + y_max));
+//        model.add(IloMinimize(env, x_max + y_max));
       }
     
       IloCP cp(model);
      // cp.setParam(IloCP::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
-      cp.solve();
+      if(cp.solve())
+      {
     
     
       cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
- /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
-      rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);*/
-
+ /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);*/
+      rysowanieWPliku(cp,bPierwszyWariant, wszystkieKlocki);
+      }
+      else{
+        cout<<"brak rozwi¹zania"<<endl;
+      }
     }
     catch (IloException& ex) {
       cerr << "Error: " << ex << endl;
