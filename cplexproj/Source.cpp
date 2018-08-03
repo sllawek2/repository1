@@ -11,7 +11,7 @@ ILOSTLBEGIN
 	
 const unsigned int ILOSC_KLOCKOW = 27;
 
-const IloInt b = 180, c = 180;
+const IloInt b = 100, c = 100;
 const int jednostka = 5;
 const int wymiarX=b/jednostka;
 const int wymiarY=c/jednostka;
@@ -19,7 +19,7 @@ const int wymiarY=c/jednostka;
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),o(env,0,1),h(h),p(env,0,1)//, d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
+	  w(w),h(h)//,o(env,0,1),p(env,0,1)//, d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
   {
     for(int i =0; i<wymiarX; i++)
     {
@@ -42,8 +42,8 @@ public:
   //gap frame = 10 //przerwa pomiêdzy palet¹ a produktami
   //box limit 180x180 //wymiary palety
   //IloNum pole; //pole a*b
-  IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
-  IloBoolVar p;// 0 nie wybrany, 1 wybrany
+  //IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
+  //IloBoolVar p;// 0 nie wybrany, 1 wybrany
   
   //IloBoolVar d1;
   //IloBoolVar d2;
@@ -144,7 +144,7 @@ int main()
       IloModel model(env);
     
       //stworzenie tablicy pól wszystkich klocków
-      IloNum Sumapol=0;//suma wszystkich pol
+//      IloNum Sumapol=0;//suma wszystkich pol
       IloIntExpr poleMax(env);
       for(int i = 0; i<ILOSC_KLOCKOW; i++)
       {
@@ -152,7 +152,7 @@ int main()
         {
           for(int y=0;y<wymiarY;y++)
           {
-            poleMax+=wszystkieKlocki[i].tablica[x][y];
+            poleMax += wszystkieKlocki[i].tablica[x][y];
           }
         }
     /*    iPola.add(wszystkieKlocki[i].pole);
@@ -245,7 +245,7 @@ int main()
       {
     
     
-      cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
+  //    cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
  /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);*/
       rysowanieWPliku(cp,bPierwszyWariant, wszystkieKlocki);
       }
@@ -267,3 +267,8 @@ int main()
   getchar();//stop 
   return 0;
 }
+
+//1. poszukaæ o funkcji element
+//2. dorobiæ obrót
+//3. drugi wariant?
+//4. przerobiæ na jedn¹ tablicê?
