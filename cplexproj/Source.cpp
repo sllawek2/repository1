@@ -9,7 +9,7 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 4;
+const unsigned int ILOSC_KLOCKOW = 27;
 
 IloInt a = 10;//gap frame
 IloInt b = 180, c = 180;
@@ -21,6 +21,7 @@ public:
   {
 
   }
+
 
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
@@ -82,7 +83,7 @@ void dodajWspolneOgraniczenia(IloModel& modelRef, const Klocek & klocek)
   modelRef.add(klocek.y1 >= a);							//4.4
   modelRef.add(klocek.y2 <= c-a);						//4.5
   
-  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8
+  modelRef.add(klocek.x1 + klocek.w + klocek.h*klocek.o - klocek.w*klocek.o - klocek.x2 == 0);//4.7 4.8 
   modelRef.add(klocek.y1 + klocek.h + (klocek.w - klocek.h)*klocek.o - klocek.y2 == 0); //4.9 4.10
 }
 
@@ -172,6 +173,38 @@ void rysowanieWPliku(const IloCplex &cplex, const bool bPierwszyWariant, const v
   }
 }
 
+void wynikdoPliku(const IloCplex & cplex, const bool bPierwszyWariant, const std::vector<Klocek> & wszystkieKlocki,const IloNum & Sumapol )
+{
+	double tab[27][4];
+	for(int i = 0; i<ILOSC_KLOCKOW;i++)
+	{
+		double x1=cplex.getValue(wszystkieKlocki[i].x1),y1=cplex.getValue(wszystkieKlocki[i].y1);
+		double x2=cplex.getValue(wszystkieKlocki[i].x2),y2=cplex.getValue(wszystkieKlocki[i].y2);
+		tab[i][0]=x1;tab[i][1]=y1;tab[i][2]=x2;tab[i][3]=y2;
+
+	
+	}
+		fstream outputFile;
+		outputFile.open("wynik1.txt",'w');
+		outputFile<<""<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< 180*180 << endl;
+		outputFile<<"status = "<< cplex.getStatus()<<endl;
+		outputFile<< "Max po optymalizacji i ograniczeniach =" << cplex.getObjValue() << endl;
+		outputFile<<"x1,y1,x2,y2-wspó³rzêdne klocka, w-szerokoœæ, h-wysokoœæ ,o-czy zosta³ obrócony p- czy klocek zosta³ wybrany"<<endl;
+		outputFile<<"         x1,y1,x2,y2,w,h,o,p"<<endl;
+		for (int i = 0; i < ILOSC_KLOCKOW; i++)
+		{
+			if(outputFile.good())
+			{
+				outputFile<<"Klocek"<<i+1<<":"<<tab[i][0]<<","<<tab[i][1]<<","<<tab[i][2]<<","<<tab[i][3];
+				outputFile<<","<<wszystkieKlocki[i].w;
+				outputFile<<","<<wszystkieKlocki[i].h;
+			//	outputFile<<","<<cplex.getValue(wszystkieKlocki[i].o)<<endl; // wywala blad 
+				outputFile<<","<<cplex.getValue(wszystkieKlocki[i].p)<<endl;
+				
+			}
+		}
+
+ }
 int main()
 {
   IloEnv env;
@@ -227,38 +260,6 @@ int main()
         }
       }
     
-	  ////ostatni warunek - suma
-	  //if(1==Wariant)
-	  //{
-	  //	model.add(wszystkieKlocki[0].pole*wszystkieKlocki[0].p+
-	  //		      wszystkieKlocki[1].pole*wszystkieKlocki[1].p+
-	  //		      wszystkieKlocki[2].pole*wszystkieKlocki[2].p+
-	  //		      wszystkieKlocki[3].pole*wszystkieKlocki[3].p+
-	  //	          wszystkieKlocki[4].pole*wszystkieKlocki[4].p+
-	  //		      wszystkieKlocki[5].pole*wszystkieKlocki[5].p+
-	  //		      wszystkieKlocki[6].pole*wszystkieKlocki[6].p+
-	  //		      wszystkieKlocki[7].pole*wszystkieKlocki[7].p+
-	  //		      wszystkieKlocki[8].pole*wszystkieKlocki[8].p+
-	  //		      wszystkieKlocki[9].pole*wszystkieKlocki[9].p+
-	  //	          wszystkieKlocki[10].pole*wszystkieKlocki[10].p+
-	  //		      wszystkieKlocki[11].pole*wszystkieKlocki[11].p+
-	  //		      wszystkieKlocki[12].pole*wszystkieKlocki[12].p+
-	  //		      wszystkieKlocki[13].pole*wszystkieKlocki[13].p+
-	  //		      wszystkieKlocki[14].pole*wszystkieKlocki[14].p+
-	  //		      wszystkieKlocki[15].pole*wszystkieKlocki[15].p+
-	  //		      wszystkieKlocki[16].pole*wszystkieKlocki[16].p+
-	  //		      wszystkieKlocki[18].pole*wszystkieKlocki[18].p+
-	  //		      wszystkieKlocki[19].pole*wszystkieKlocki[19].p+
-	  //		      wszystkieKlocki[20].pole*wszystkieKlocki[20].p+
-	  //		      wszystkieKlocki[21].pole*wszystkieKlocki[21].p+
-	  //		      wszystkieKlocki[22].pole*wszystkieKlocki[22].p+
-	  //	          wszystkieKlocki[23].pole*wszystkieKlocki[23].p+
-	  //		      wszystkieKlocki[24].pole*wszystkieKlocki[24].p+
-	  //		      wszystkieKlocki[25].pole*wszystkieKlocki[25].p+
-	  //		      wszystkieKlocki[26].pole*wszystkieKlocki[26].p <= (b-a)*(c-a));     //4.15 ale ten warunek zawiera sie w 4.3 i 4.5   
-	  //}
-    
-    
       //dodanie do modelu celu
       if(true == bPierwszyWariant)
       {
@@ -266,7 +267,7 @@ int main()
       }
       else
       {
-        model.add(IloMinimize(env, x_max + y_max));//lepszym warunkiem by³oby IloMinimize(env, SUMA(x2k+y2k))?
+        model.add(IloMinimize(env, x_max + y_max));
       }
     
       IloCplex cplex(model);
@@ -279,7 +280,7 @@ int main()
       cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
       wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);
       rysowanieWPliku(cplex,bPierwszyWariant, wszystkieKlocki);
-
+	  wynikdoPliku(cplex,bPierwszyWariant, wszystkieKlocki,Sumapol);
     }
     catch (IloException& ex) {
       cerr << "Error: " << ex << endl;
