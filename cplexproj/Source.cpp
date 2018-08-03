@@ -12,7 +12,7 @@ ILOSTLBEGIN
 const unsigned int ILOSC_KLOCKOW = 27;
 
 const IloInt b = 180, c = 180;
-const int jednostka = 20;
+const int jednostka = 5;
 const int wymiarX=b/jednostka;
 const int wymiarY=c/jednostka;
 
@@ -197,7 +197,7 @@ int main()
             suma1+=wszystkieKlocki[i].tablica[x][y];
             sumaCalosci+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma1==0||suma1 == wszystkieKlocki[i].h /*+wszystkieKlocki[k].h*wszystkieKlocki[k].o - wszystkieKlocki[k].w*wszystkieKlocki[k].o*/);
+          model.add(suma1==0||suma1 == wszystkieKlocki[i].w /*+wszystkieKlocki[k].h*wszystkieKlocki[k].o - wszystkieKlocki[k].w*wszystkieKlocki[k].o*/);
         }
         model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h||sumaCalosci==0);
      // suma w kolumnie (mo¿liwe ¿e odwrotnie trzeba wysokoœæ i szerokoœæ daæ)
@@ -208,136 +208,24 @@ int main()
           {
             suma2+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma2==0||suma2 == wszystkieKlocki[i].w /*+wszystkieKlocki[k].w*wszystkieKlocki[k].o - wszystkieKlocki[k].h*wszystkieKlocki[k].o*/);//tu chyba ma byæ odwrotnie
+          model.add(suma2==0||suma2 == wszystkieKlocki[i].h /*+wszystkieKlocki[k].w*wszystkieKlocki[k].o - wszystkieKlocki[k].h*wszystkieKlocki[k].o*/);//tu chyba ma byæ odwrotnie
         }
  
         for(int x=0;x<wymiarX;x++)
         {
           for(int y=0;y<wymiarY;y++)
           {
-            if(wszystkieKlocki[i].w>1)
+            for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
             {
-              if(x==0)
-              {
-                model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x+1][y]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]);
-              }else if(x==wymiarX-1)
-              {
-                model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x-1][y]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]);
-              }
-              else
-              {
-                model.add((wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x+1][y]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y] ||
-                           wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x-1][y]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]));
-              }
-
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]==0);
             }
-            if(wszystkieKlocki[i].h>1)
+            for(int k = y+wszystkieKlocki[i].w; k<wymiarY; k++)
             {
-              if(y==0)
-              {
-                model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x][y+1]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]);
-              }else if(y==wymiarY-1)
-              {
-                model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x][y-1]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]);
-              }
-              else
-              {
-                model.add((wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x][y+1]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y] ||
-                           wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[i].tablica[x][y+1]*wszystkieKlocki[i].tablica[x][y]==2*wszystkieKlocki[i].tablica[x][y]));
-              }
-            }
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]==0);
+            } 
           }
         }
-
-        //if(wszystkieKlocki[i].w < wymiarX)
-        //{
-        //  for(int y=0;y<wymiarY;y++)
-        //  {
-        //    model.add(wszystkieKlocki[i].tablica[0][y]+wszystkieKlocki[i].tablica[wymiarX-1][y]<=1);
-        //  }
-        //}
-        //if(wszystkieKlocki[i].w < wymiarX)
-        //{
-        //  for(int x=0; x<wymiarX;x++)
-        //  {
-        //    model.add(wszystkieKlocki[i].tablica[x][0]+wszystkieKlocki[i].tablica[x][wymiarY-1]<=1);
-        //  }
-        //}
       }
-
-
-      
-
-
-
-
-
-     /*       for(int l = i+wszystkieKlocki[k].w; l<jednostka; l++)
-            {
-              wszystkieKlocki[k].tablica[i][j]+*/
-            //wszystkieKlocki[k].o;
-
-            //alternatywny sposób
-           /* IloIntExpr bezObrotuX(env);
-
-
-            IloIntExpr bezObrotuY=wszystkieKlocki[k].tablica[i][0];
-            IloIntExpr zObrotemX=wszystkieKlocki[k].tablica[i][0];
-            IloIntExpr zObrotemY=wszystkieKlocki[k].tablica[0][j];
-            suma += wszystkieKlocki[k].tablica[i][j];
-            for(int l =1;l<wszystkieKlocki[k].w, l<wymiarX;l++)
-            {
-              bezObrotuX+=wszystkieKlocki[k].tablica[l][j];
-              zObrotemY+=wszystkieKlocki[k].tablica[l][j];
-            }
-            for(int l = 1 ; l<wszystkieKlocki[k].h, l<wymiarY;l++)
-            {
-              bezObrotuY+=wszystkieKlocki[k].tablica[i][l];
-              zObrotemX+=wszystkieKlocki[k].tablica[i][l];
-            }
-
-            model.add((bezObrotuX == wszystkieKlocki[k].w && bezObrotuY == wszystkieKlocki[k].h) ||
-                      (zObrotemX == wszystkieKlocki[k].h && zObrotemY == wszystkieKlocki[k].w));
-          }
-          model.add(suma <= 1);
-        }
-      }
-*/
-
-//dla ka¿dej tablicy suma wierszy/kolumn = w lub h lub 0
-
-
-
-
-
-
-
-
-
-
-
-      //for(int i = 0; i<ILOSC_KLOCKOW; i++) //i to k 
-      //{
-      //  //dodajWspolneOgraniczenia(model, wszystkieKlocki[i]);
-      //  wszystkieKlocki[i].x1+
-      //  if(true == bPierwszyWariant)
-      //  {
-      //    for(int j = i+1; j<ILOSC_KLOCKOW; j++) //j to f
-      //    {
-      //      dodajOgraniczeniaPierwszegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
-      //    }
-      //  }
-      //  else
-      //  {
-      //    for(int j = i+1; j<ILOSC_KLOCKOW ; j++) //j to f
-      //    {
-      //      dodajOgraniczeniaDrugiegoWariantu(model, wszystkieKlocki[i], wszystkieKlocki[j]);
-      //    }
-      //    model.add(wszystkieKlocki[i].x2 <= x_max);
-      //    model.add(wszystkieKlocki[i].y2 <= y_max);
-      //  }
-      //}
-    
       //dodanie do modelu celu
       if(true == bPierwszyWariant)
       {
@@ -349,7 +237,7 @@ int main()
       }
     
       IloCP cp(model);
-      cp.setParameter(IloCP::NumParam::TimeLimit,60);
+      cp.setParameter(IloCP::NumParam::TimeLimit,120);
      // cp.setParam(IloCP::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
