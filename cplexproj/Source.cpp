@@ -9,17 +9,17 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 27;
+const unsigned int ILOSC_KLOCKOW = 7;
 
-const IloInt b = 100, c = 100;
-const int jednostka = 5;
+const IloInt b = 50, c = 50;
+const int jednostka = 10;
 const int wymiarX=b/jednostka;
 const int wymiarY=c/jednostka;
 
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),h(h)//,o(env,0,1),p(env,0,1)//, d1(env,0,1), d2(env,0,1), d3(env,0,1), d4(env,0,1)
+	  w(w),o(env,0,1),h(h)
   {
     for(int i =0; i<wymiarX; i++)
     {
@@ -32,23 +32,7 @@ public:
 
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
- // IloIntVar x1; //bli¿sza krawêdŸ na osi X
-  //IloIntVar x2; //dalsza krawêdŸ na osi X
- // IloIntVar y1;
-  //IloIntVar y2;
-  //IloIntVar x; //po³o¿enie œrodka produktu
-  //IloIntVar y;
-  //gap = 3 //odstêp pomiedzy produktami
-  //gap frame = 10 //przerwa pomiêdzy palet¹ a produktami
-  //box limit 180x180 //wymiary palety
-  //IloNum pole; //pole a*b
-  //IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
-  //IloBoolVar p;// 0 nie wybrany, 1 wybrany
-  
-  //IloBoolVar d1;
-  //IloBoolVar d2;
-  //IloBoolVar d3;
-  //IloBoolVar d4;
+  IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
   IloIntVar tablica[wymiarX][wymiarY];
 };
 
@@ -144,7 +128,7 @@ int main()
       IloModel model(env);
     
       //stworzenie tablicy pól wszystkich klocków
-//      IloNum Sumapol=0;//suma wszystkich pol
+      IloNum Sumapol=0;//suma wszystkich pol
       IloIntExpr poleMax(env);
       for(int i = 0; i<ILOSC_KLOCKOW; i++)
       {
@@ -152,16 +136,13 @@ int main()
         {
           for(int y=0;y<wymiarY;y++)
           {
-            poleMax += wszystkieKlocki[i].tablica[x][y];
+            poleMax+=wszystkieKlocki[i].tablica[x][y];
           }
         }
-    /*    iPola.add(wszystkieKlocki[i].pole);
-        iTabWybranych.add(wszystkieKlocki[i].p);
-        Sumapol=Sumapol+wszystkieKlocki[i].pole;*/
       }
     
-      //IloIntVar x_max(env, a, b-a);//uzyte tylko w drugim wariancie
-      //IloIntVar y_max(env, a, c-a);//uzyte tylko w drugim wariancie
+      IloIntVar x_max(env, 0, wymiarX);//uzyte tylko w drugim wariancie
+      IloIntVar y_max(env, 0, wymiarY);//uzyte tylko w drugim wariancie
       
       bool bPierwszyWariant = true;
    /*   if(Sumapol < 0.75 * wymiarX*wymiarY)
@@ -197,7 +178,7 @@ int main()
             suma1+=wszystkieKlocki[i].tablica[x][y];
             sumaCalosci+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma1==0||suma1 == wszystkieKlocki[i].w /*+wszystkieKlocki[k].h*wszystkieKlocki[k].o - wszystkieKlocki[k].w*wszystkieKlocki[k].o*/);
+          model.add(suma1==0||suma1 == wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);
         }
         model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h||sumaCalosci==0);
      // suma w kolumnie (mo¿liwe ¿e odwrotnie trzeba wysokoœæ i szerokoœæ daæ)
@@ -208,7 +189,7 @@ int main()
           {
             suma2+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma2==0||suma2 == wszystkieKlocki[i].h /*+wszystkieKlocki[k].w*wszystkieKlocki[k].o - wszystkieKlocki[k].h*wszystkieKlocki[k].o*/);//tu chyba ma byæ odwrotnie
+          model.add(suma2==0||suma2 == wszystkieKlocki[i].h +wszystkieKlocki[i].w*wszystkieKlocki[i].o - wszystkieKlocki[i].h*wszystkieKlocki[i].o);
         }
  
         for(int x=0;x<wymiarX;x++)
@@ -217,11 +198,20 @@ int main()
           {
             for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
             {
-              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]==0);
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*(1-wszystkieKlocki[i].o) == 0);
             }
             for(int k = y+wszystkieKlocki[i].w; k<wymiarY; k++)
             {
-              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]==0);
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]*(1- wszystkieKlocki[i].o) == 0);
+            } 
+             
+            for(int k = x+wszystkieKlocki[i].w; k<wymiarX; k++)
+            {
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*wszystkieKlocki[i].o == 0);
+            }
+            for(int k = y+wszystkieKlocki[i].h; k<wymiarY; k++)
+            {
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]*wszystkieKlocki[i].o == 0);
             } 
           }
         }
@@ -233,11 +223,11 @@ int main()
       }
       else
       {
-//        model.add(IloMinimize(env, x_max + y_max));
+        model.add(IloMinimize(env, x_max + y_max));
       }
     
       IloCP cp(model);
-      cp.setParameter(IloCP::NumParam::TimeLimit,120);
+      cp.setParameter(IloCP::NumParam::TimeLimit,60);
      // cp.setParam(IloCP::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
@@ -245,7 +235,7 @@ int main()
       {
     
     
-  //    cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
+      cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
  /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);*/
       rysowanieWPliku(cp,bPierwszyWariant, wszystkieKlocki);
       }
@@ -267,8 +257,3 @@ int main()
   getchar();//stop 
   return 0;
 }
-
-//1. poszukaæ o funkcji element
-//2. dorobiæ obrót
-//3. drugi wariant?
-//4. przerobiæ na jedn¹ tablicê?
