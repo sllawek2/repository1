@@ -9,23 +9,25 @@ ILOSTLBEGIN
 #include <iostream>
 
 	
-const unsigned int ILOSC_KLOCKOW = 7;
+const unsigned int ILOSC_KLOCKOW = 3;
 
-const IloInt b = 50, c = 50;
-const int jednostka = 10;
-const int wymiarX=b/jednostka;
-const int wymiarY=c/jednostka;
+const int wymiarX = 15, wymiarY = 15;
+//const int jednostka = 10;
+//const int wymiarX=b/jednostka;
+//const int wymiarY=c/jednostka;
 
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),o(env,0,1),h(h)
+	  w(w),o(env,0,1),h(h),tablica(env), tab2(env)
   {
-    for(int i =0; i<wymiarX; i++)
+    for(int x =0; x<wymiarX; x++)
     {
-      for(int j=0;j<wymiarY;j++)
+      tab2.add(IloIntArray(env,3));
+      tablica.add(IloIntVarArray(env));
+      for(int y=0;y<wymiarY;y++)
       {
-        tablica[i][j]=IloBoolVar(env,0,1);
+        tablica[x].add(IloIntVar(env,0,1));
       }
     }
   }
@@ -33,7 +35,8 @@ public:
   IloInt w;//szerokoœæ produktu [30,80]
   IloInt h;//wysokoœæ produktu [30,50]
   IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
-  IloIntVar tablica[wymiarX][wymiarY];
+  IloArray<IloIntVarArray> tablica;
+  IloArray<IloIntArray> tab2;
 };
 
 
@@ -51,14 +54,11 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
       std::getline(fInputFile,sLine);
       std::stringstream stream(sLine);
       stream>>a>>b;
-      //if(a>80 || a<30 || b>50 || b<30)
-      //{
-      //  cout<<"bledne dane!!!!"<<endl;
-      //  return false;
-      //}
-
-      a= a/jednostka;
-      b = b/jednostka;
+      if(a>wymiarX || a<1 || b>wymiarY || b<1)
+      {
+        cout<<"bledne dane!!!!"<<endl;
+        return false;
+      }
 
       Klocek k(env,a,b);
       ref.push_back(k);
@@ -144,7 +144,7 @@ int main()
       IloIntVar x_max(env, 0, wymiarX);//uzyte tylko w drugim wariancie
       IloIntVar y_max(env, 0, wymiarY);//uzyte tylko w drugim wariancie
       
-      bool bPierwszyWariant = true;
+      bool bPierwszyWariant = false;
    /*   if(Sumapol < 0.75 * wymiarX*wymiarY)
       {
         bPierwszyWariant = false;
@@ -180,7 +180,8 @@ int main()
           }
           model.add(suma1==0||suma1 == wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);
         }
-        model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h||sumaCalosci==0);
+        //model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h||sumaCalosci==0);//wariant1
+        model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h);
      // suma w kolumnie (mo¿liwe ¿e odwrotnie trzeba wysokoœæ i szerokoœæ daæ)
         for(int y =0; y<wymiarY;y++)
         {
@@ -223,11 +224,43 @@ int main()
       }
       else
       {
-        model.add(IloMinimize(env, x_max + y_max));
+        for(int i = 0;i<ILOSC_KLOCKOW;i++)
+        {
+          for(int y=0;y<wymiarY;y++)
+          {
+            IloIntVarArray tabX(env);
+            
+            for(int x =0; x<wymiarX;x++)
+            {
+              tabX.add(wszystkieKlocki[i].tablica[x][y]);
+            }
+            tabX.add(IloIntVar(env,0,0));//obejscie
+
+            IloIntVar iks(env, 0,wymiarX-1);
+            model.add(((1==IloElement(tabX,iks)) && (0==IloElement(tabX,iks+1))) == (IloSum(tabX)>0));
+            model.add(iks<=x_max);
+          }
+          
+            for(int x =0; x<wymiarX;x++)
+          {
+            IloIntVarArray tabY(env);
+            for(int y=0;y<wymiarY;y++)
+            {
+              tabY.add(wszystkieKlocki[i].tablica[x][y]);
+            }
+            tabY.add(IloIntVar(env,0,0));//obejscie
+
+            IloIntVar iks2(env, 0,wymiarY-1);
+            model.add(((1==IloElement(tabY,iks2)) && (0==IloElement(tabY,iks2+1))) == (IloSum(tabY)>0));
+            model.add(iks2<=y_max);
+          }
+
+        }
+        model.add(IloMinimize(env, x_max+ y_max ));
       }
     
       IloCP cp(model);
-      cp.setParameter(IloCP::NumParam::TimeLimit,60);
+      cp.setParameter(IloCP::NumParam::TimeLimit,240);
      // cp.setParam(IloCP::TiLim, 60);//limit czasowy
      // cplex.setOut(env.getNullStream());
       //cplex.setWarning(env.getNullStream());
@@ -235,7 +268,7 @@ int main()
       {
     
     
-      cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
+      //cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
  /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);*/
       rysowanieWPliku(cp,bPierwszyWariant, wszystkieKlocki);
       }
