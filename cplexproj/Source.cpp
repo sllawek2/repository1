@@ -12,18 +12,14 @@ ILOSTLBEGIN
 const unsigned int ILOSC_KLOCKOW = 3;
 
 const int wymiarX = 15, wymiarY = 15;
-//const int jednostka = 10;
-//const int wymiarX=b/jednostka;
-//const int wymiarY=c/jednostka;
 
 class Klocek{
 public:
   Klocek(const IloEnv &env,unsigned int w, unsigned int h):
-	  w(w),o(env,0,1),h(h),tablica(env), tab2(env)
+	  w(w),o(env,0,1),h(h),tablica(env)
   {
     for(int x =0; x<wymiarX; x++)
     {
-      tab2.add(IloIntArray(env,3));
       tablica.add(IloIntVarArray(env));
       for(int y=0;y<wymiarY;y++)
       {
@@ -36,7 +32,6 @@ public:
   IloInt h;//wysokoœæ produktu [30,50]
   IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
   IloArray<IloIntVarArray> tablica;
-  IloArray<IloIntArray> tab2;
 };
 
 
@@ -72,7 +67,7 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
   }
 }
 
-void rysowanieWPliku(const IloCP &cplex, const bool bPierwszyWariant, const vector<Klocek> & wszystkieKlocki)
+void rysowanieWPliku(const IloCP &cplex, const vector<Klocek> & wszystkieKlocki)
 {
   char tablica[wymiarX][wymiarY];
   char znaki[] ={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9'};
@@ -84,17 +79,13 @@ void rysowanieWPliku(const IloCP &cplex, const bool bPierwszyWariant, const vect
     {
       for(int y=0;y<wymiarY;y++)
       {
-        cout<<cplex.getValue(wszystkieKlocki[i].tablica[x][y]);
         if(cplex.getValue(wszystkieKlocki[i].tablica[x][y])==1)
         {
           tablica[x][y]= znaki[i];
         }
       }
-      cout<<endl;
     }
-    cout<<endl;
   }
-
 
   fstream outputFile;
   outputFile.open("wynik.txt",'w');
@@ -122,46 +113,25 @@ int main()
   std::vector<Klocek> wszystkieKlocki;
   if(true == wczytanieDanych(env, "dane.txt",wszystkieKlocki))
   {
-
     try
     {
       IloModel model(env);
-    
-      //stworzenie tablicy pól wszystkich klocków
-      IloNum Sumapol=0;//suma wszystkich pol
-      IloIntExpr poleMax(env);
-      for(int i = 0; i<ILOSC_KLOCKOW; i++)
-      {
-        for(int x=0; x<wymiarX;x++)
-        {
-          for(int y=0;y<wymiarY;y++)
-          {
-            poleMax+=wszystkieKlocki[i].tablica[x][y];
-          }
-        }
-      }
-    
-      IloIntVar x_max(env, 0, wymiarX);//uzyte tylko w drugim wariancie
-      IloIntVar y_max(env, 0, wymiarY);//uzyte tylko w drugim wariancie
-      
-      bool bPierwszyWariant = false;
-   /*   if(Sumapol < 0.75 * wymiarX*wymiarY)
-      {
-        bPierwszyWariant = false;
-      }*/
-    
+
+      IloIntVar x_max(env, 0, wymiarX);
+      IloIntVar y_max(env, 0, wymiarY);
+         
       //ograniczenia
       for(int x = 0; x<wymiarX; x++)
       {
         for(int y=0;y<wymiarY;y++)
         {
-          IloIntExpr suma(env);
+   //       IloIntExpr suma(env);
 
           for(int i = 0;i <ILOSC_KLOCKOW; i++)
           {
             for(int j = i+1 ; j<ILOSC_KLOCKOW; j++)
             {
-              model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[j].tablica[x][y] <=1 );//warunek ¿eby klocki na siebie nie nachodzi³y
+              model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[j].tablica[x][y] <=1 );//warunek ¿eby klocki na siebie nie nachodzi³y, bierze pojedynczy wymiar(x,y-1,2 petla) i sprawdza kazdy klocek(3,4 petla)
             }
           }
         }
@@ -170,7 +140,7 @@ int main()
       for(int i=0;i<ILOSC_KLOCKOW;i++)
       {
         IloIntExpr sumaCalosci(env);
-        for(int x =0;x<wymiarX;x++)//suma w wierszu
+        for(int x =0;x<wymiarX;x++)//suma w kolumnie
         {
           IloIntExpr suma1(env);
           for(int y =0; y<wymiarY;y++)
@@ -178,11 +148,10 @@ int main()
             suma1+=wszystkieKlocki[i].tablica[x][y];
             sumaCalosci+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma1==0||suma1 == wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);
+          model.add(suma1==0||suma1 ==wszystkieKlocki[i].h +wszystkieKlocki[i].w*wszystkieKlocki[i].o - wszystkieKlocki[i].h*wszystkieKlocki[i].o);// ograniczenie które zapewnia ze klocki nie bed¹ rozstrzelone
         }
-        //model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h||sumaCalosci==0);//wariant1
-        model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h);
-     // suma w kolumnie (mo¿liwe ¿e odwrotnie trzeba wysokoœæ i szerokoœæ daæ)
+        model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h);//warunek ¿eby ka¿dy klocek zosta³ dok³adnie raz u¿yty
+     // suma w wierszu
         for(int y =0; y<wymiarY;y++)
         {
           IloIntExpr suma2(env);
@@ -190,27 +159,27 @@ int main()
           {
             suma2+=wszystkieKlocki[i].tablica[x][y];
           }
-          model.add(suma2==0||suma2 == wszystkieKlocki[i].h +wszystkieKlocki[i].w*wszystkieKlocki[i].o - wszystkieKlocki[i].h*wszystkieKlocki[i].o);
+          model.add(suma2==0||suma2 ==  wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);
         }
- 
+         //warunki ¿eby nie by³y rozstrzelone
         for(int x=0;x<wymiarX;x++)
         {
           for(int y=0;y<wymiarY;y++)
           {
-            for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
+            for(int k = x+wszystkieKlocki[i].w; k<wymiarX; k++)
             {
               model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*(1-wszystkieKlocki[i].o) == 0);
             }
-            for(int k = y+wszystkieKlocki[i].w; k<wymiarY; k++)
-            {
-              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]*(1- wszystkieKlocki[i].o) == 0);
-            } 
-             
-            for(int k = x+wszystkieKlocki[i].w; k<wymiarX; k++)
+			for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
             {
               model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*wszystkieKlocki[i].o == 0);
             }
+
             for(int k = y+wszystkieKlocki[i].h; k<wymiarY; k++)
+            {
+              model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]*(1- wszystkieKlocki[i].o) == 0);
+            } 
+            for(int k = y+wszystkieKlocki[i].w; k<wymiarY; k++)
             {
               model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[x][k]*wszystkieKlocki[i].o == 0);
             } 
@@ -218,59 +187,46 @@ int main()
         }
       }
       //dodanie do modelu celu
-      if(true == bPierwszyWariant)
+      for(int i = 0;i<ILOSC_KLOCKOW;i++)
       {
-        model.add(IloMaximize(env ,poleMax));
-      }
-      else
-      {
-        for(int i = 0;i<ILOSC_KLOCKOW;i++)
+        for(int y=0;y<wymiarY;y++)
         {
+          IloIntVarArray tabX(env);
+          
+          for(int x =0; x<wymiarX;x++)
+          {
+            tabX.add(wszystkieKlocki[i].tablica[x][y]);
+          }
+          tabX.add(IloIntVar(env,0,0));//obejscie
+ 
+          IloIntVar indexX(env, 0,wymiarX-1);
+          model.add(((1==IloElement(tabX,indexX)) && (0==IloElement(tabX,indexX+1))) == (IloSum(tabX)>0));//
+          model.add(indexX<=x_max);
+        }
+          
+        for(int x =0; x<wymiarX;x++)
+        {
+          IloIntVarArray tabY(env);
           for(int y=0;y<wymiarY;y++)
           {
-            IloIntVarArray tabX(env);
-            
-            for(int x =0; x<wymiarX;x++)
-            {
-              tabX.add(wszystkieKlocki[i].tablica[x][y]);
-            }
-            tabX.add(IloIntVar(env,0,0));//obejscie
-
-            IloIntVar iks(env, 0,wymiarX-1);
-            model.add(((1==IloElement(tabX,iks)) && (0==IloElement(tabX,iks+1))) == (IloSum(tabX)>0));
-            model.add(iks<=x_max);
+            tabY.add(wszystkieKlocki[i].tablica[x][y]);
           }
-          
-            for(int x =0; x<wymiarX;x++)
-          {
-            IloIntVarArray tabY(env);
-            for(int y=0;y<wymiarY;y++)
-            {
-              tabY.add(wszystkieKlocki[i].tablica[x][y]);
-            }
-            tabY.add(IloIntVar(env,0,0));//obejscie
+          tabY.add(IloIntVar(env,0,0));//obejscie
 
-            IloIntVar iks2(env, 0,wymiarY-1);
-            model.add(((1==IloElement(tabY,iks2)) && (0==IloElement(tabY,iks2+1))) == (IloSum(tabY)>0));
-            model.add(iks2<=y_max);
-          }
-
+          IloIntVar indexY(env, 0,wymiarY-1);
+          model.add(((1==IloElement(tabY,indexY)) && (0==IloElement(tabY,indexY+1))) == (IloSum(tabY)>0));
+          model.add(indexY<=y_max);
         }
-        model.add(IloMinimize(env, x_max+ y_max ));
+
       }
-    
+      model.add(IloMinimize(env, x_max+ y_max ));
+  
       IloCP cp(model);
-      cp.setParameter(IloCP::NumParam::TimeLimit,240);
-     // cp.setParam(IloCP::TiLim, 60);//limit czasowy
-     // cplex.setOut(env.getNullStream());
-      //cplex.setWarning(env.getNullStream());
+      cp.setParameter(IloCP::NumParam::TimeLimit,60);
+
       if(cp.solve())
       {
-    
-    
-      //cout<<"Suma pol wszystkich klockow = "<<Sumapol<<", Pole palety = "<< c*b << endl;
- /*     wyswietlenieWynikow(cplex, bPierwszyWariant, wszystkieKlocki);*/
-      rysowanieWPliku(cp,bPierwszyWariant, wszystkieKlocki);
+      rysowanieWPliku(cp, wszystkieKlocki);
       }
       else{
         cout<<"brak rozwi¹zania"<<endl;
