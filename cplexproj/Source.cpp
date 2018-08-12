@@ -28,8 +28,8 @@ public:
     }
   }
 
-  IloInt w;//szerokoœæ produktu [30,80]
-  IloInt h;//wysokoœæ produktu [30,50]
+  IloInt w;//szerokoœæ produktu 
+  IloInt h;//wysokoœæ produktu 
   IloBoolVar o; //orientacja o {0,1} bez obrotu, obrót
   IloArray<IloIntVarArray> tablica;
 };
@@ -125,13 +125,11 @@ int main()
       {
         for(int y=0;y<wymiarY;y++)
         {
-   //       IloIntExpr suma(env);
-
           for(int i = 0;i <ILOSC_KLOCKOW; i++)
           {
             for(int j = i+1 ; j<ILOSC_KLOCKOW; j++)
             {
-              model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[j].tablica[x][y] <=1 );//warunek ¿eby klocki na siebie nie nachodzi³y, bierze pojedynczy wymiar(x,y-1,2 petla) i sprawdza kazdy klocek(3,4 petla)
+              model.add(wszystkieKlocki[i].tablica[x][y]+wszystkieKlocki[j].tablica[x][y] <=1 );//warunek ¿eby klocki na siebie nie nachodzi³y
             }
           }
         }
@@ -140,26 +138,26 @@ int main()
       for(int i=0;i<ILOSC_KLOCKOW;i++)
       {
         IloIntExpr sumaCalosci(env);
-        for(int x =0;x<wymiarX;x++)//suma w kolumnie
+        for(int x =0;x<wymiarX;x++)
         {
           IloIntExpr suma1(env);
           for(int y =0; y<wymiarY;y++)
           {
-            suma1+=wszystkieKlocki[i].tablica[x][y];
-            sumaCalosci+=wszystkieKlocki[i].tablica[x][y];
+            suma1+=wszystkieKlocki[i].tablica[x][y];//suma w kolumnie
+            sumaCalosci+=wszystkieKlocki[i].tablica[x][y];//suma calosci
           }
-          model.add(suma1==0||suma1 ==wszystkieKlocki[i].h +wszystkieKlocki[i].w*wszystkieKlocki[i].o - wszystkieKlocki[i].h*wszystkieKlocki[i].o);// ograniczenie które zapewnia ze klocki nie bed¹ rozstrzelone
+          model.add(suma1==0||suma1 ==wszystkieKlocki[i].h +wszystkieKlocki[i].w*wszystkieKlocki[i].o - wszystkieKlocki[i].h*wszystkieKlocki[i].o);// ilosc pól równa siê wysokoœæ klocka lub zero
         }
         model.add(sumaCalosci==wszystkieKlocki[i].w*wszystkieKlocki[i].h);//warunek ¿eby ka¿dy klocek zosta³ dok³adnie raz u¿yty
-     // suma w wierszu
+
         for(int y =0; y<wymiarY;y++)
         {
           IloIntExpr suma2(env);
           for(int x =0;x<wymiarX;x++)
           {
-            suma2+=wszystkieKlocki[i].tablica[x][y];
+            suma2+=wszystkieKlocki[i].tablica[x][y];     // suma w wierszu
           }
-          model.add(suma2==0||suma2 ==  wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);
+          model.add(suma2==0||suma2 ==  wszystkieKlocki[i].w +wszystkieKlocki[i].h*wszystkieKlocki[i].o - wszystkieKlocki[i].w*wszystkieKlocki[i].o);//iloœæ pól równa siê szerokoœæ klocka lub zero
         }
          //warunki ¿eby nie by³y rozstrzelone
         for(int x=0;x<wymiarX;x++)
@@ -170,7 +168,7 @@ int main()
             {
               model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*(1-wszystkieKlocki[i].o) == 0);
             }
-			for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
+            for(int k = x+wszystkieKlocki[i].h; k<wymiarX; k++)
             {
               model.add(wszystkieKlocki[i].tablica[x][y]*wszystkieKlocki[i].tablica[k][y]*wszystkieKlocki[i].o == 0);
             }
@@ -197,10 +195,10 @@ int main()
           {
             tabX.add(wszystkieKlocki[i].tablica[x][y]);
           }
-          tabX.add(IloIntVar(env,0,0));//obejscie
+          tabX.add(IloIntVar(env,0,0));
  
           IloIntVar indexX(env, 0,wymiarX-1);
-          model.add(((1==IloElement(tabX,indexX)) && (0==IloElement(tabX,indexX+1))) == (IloSum(tabX)>0));//
+          model.add(((1==IloElement(tabX,indexX)) && (0==IloElement(tabX,indexX+1))) == (IloSum(tabX)>0));
           model.add(indexX<=x_max);
         }
           
@@ -211,7 +209,7 @@ int main()
           {
             tabY.add(wszystkieKlocki[i].tablica[x][y]);
           }
-          tabY.add(IloIntVar(env,0,0));//obejscie
+          tabY.add(IloIntVar(env,0,0));
 
           IloIntVar indexY(env, 0,wymiarY-1);
           model.add(((1==IloElement(tabY,indexY)) && (0==IloElement(tabY,indexY+1))) == (IloSum(tabY)>0));
@@ -226,7 +224,7 @@ int main()
 
       if(cp.solve())
       {
-      rysowanieWPliku(cp, wszystkieKlocki);
+        rysowanieWPliku(cp, wszystkieKlocki);
       }
       else{
         cout<<"brak rozwi¹zania"<<endl;
