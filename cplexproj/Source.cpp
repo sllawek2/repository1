@@ -8,10 +8,17 @@ ILOSTLBEGIN
 #include <vector>
 #include <iostream>
 
-	
-const unsigned int ILOSC_KLOCKOW = 3;
+	//6x6, 9x9 , 36x36
+	//1-2,1-3 ;
+const unsigned int ILOSC_KLOCKOW = 12;
 
-const int wymiarX = 15, wymiarY = 15;
+const int paletaX =180, paletaY=180;
+
+const int jednostka = 30;
+
+const int wymiarX = paletaX/jednostka, wymiarY = paletaY/jednostka;
+
+
 
 class Klocek{
 public:
@@ -44,11 +51,17 @@ bool wczytanieDanych(const IloEnv& env, const string nazwa_pliku, std::vector<Kl
   {
     for(int i=0; i<ILOSC_KLOCKOW; i++)
     {
-      int a=0,b=0;
+      float a1=0,b1=0;
       std::string sLine;
       std::getline(fInputFile,sLine);
       std::stringstream stream(sLine);
-      stream>>a>>b;
+      stream>>a1>>b1;
+
+
+	  int a = std::ceil(a1/jednostka);
+	  int b = std::ceil(b1/jednostka);
+
+
       if(a>wymiarX || a<1 || b>wymiarY || b<1)
       {
         cout<<"bledne dane!!!!"<<endl;
@@ -220,7 +233,7 @@ int main()
       model.add(IloMinimize(env, x_max+ y_max ));
   
       IloCP cp(model);
-      cp.setParameter(IloCP::NumParam::TimeLimit,60);
+      cp.setParameter(IloCP::NumParam::TimeLimit,300);
 
       if(cp.solve())
       {
